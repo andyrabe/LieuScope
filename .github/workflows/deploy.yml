@@ -66,13 +66,13 @@ jobs:
       - name: Contrôle de poids
         run: npm run poids
 
-      - name: Prévenir si la publication va être sautée
+      - name: Prévenir si la publication risque d'être refusée
         if: steps.branche.outputs.publier != 'true'
         run: |
-          echo "::warning::GitHub Pages n'accepte de publier que depuis la branche par"
-          echo "::warning::défaut du dépôt (${{ steps.branche.outputs.defaut }})."
-          echo "::warning::Le site a bien été construit, mais il ne sera pas publié depuis"
-          echo "::warning::${{ github.ref_name }}. Réglage : Settings du dépôt, « Default branch »."
+          echo "::warning::Branche par défaut du dépôt : ${{ steps.branche.outputs.defaut }}."
+          echo "::warning::Cette mise en ligne part de ${{ github.ref_name }}. Si GitHub la"
+          echo "::warning::refuse, c'est que l'environnement github-pages n'accepte que la"
+          echo "::warning::branche par défaut. Réglage : Settings du dépôt, « Default branch »."
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
