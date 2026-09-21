@@ -31,7 +31,19 @@ function poseFeuilleDeStyle(): void {
   document.head.append(lien);
 }
 
-export async function montreCarte(point: Point, charge: ChargeurTuile): Promise<void> {
+export interface OptionsCarte {
+  /** Niveau de zoom au premier affichage. */
+  zoom?: number;
+  /** Pose un repère sur le point. Inutile pour une commune : son centre
+   *  géométrique n'est l'adresse de personne. */
+  marqueur?: boolean;
+}
+
+export async function montreCarte(
+  point: Point,
+  charge: ChargeurTuile,
+  options: OptionsCarte = {},
+): Promise<void> {
   poseFeuilleDeStyle();
   const maplibre = await import('maplibre-gl');
   // MapLibre calcule les tuiles dans un fil d'exécution séparé, chargé depuis
@@ -49,7 +61,7 @@ export async function montreCarte(point: Point, charge: ChargeurTuile): Promise<
       container: conteneur,
       style,
       center: [point.lon, point.lat],
-      zoom: 14,
+      zoom: options.zoom ?? 14,
       attributionControl: { compact: false, customAttribution: ATTRIBUTION },
     });
     carte.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
@@ -76,10 +88,10 @@ export async function montreCarte(point: Point, charge: ChargeurTuile): Promise<
     }
   } else {
     carte.setCenter([point.lon, point.lat]);
-    carte.setZoom(14);
+    carte.setZoom(options.zoom ?? 14);
   }
 
-  poseZones(carte, zones, point);
+  poseZones(carte, zones, point, options.marqueur ?? true);
   carte.resize();
 }
 
@@ -99,6 +111,7 @@ function poseZones(
   carte: import('maplibre-gl').Map,
   zones: Array<Feature<LczProperties>>,
   point: Point,
+  marqueur: boolean,
 ): void {
   const donnees = {
     type: 'FeatureCollection' as const,
@@ -128,7 +141,9 @@ function poseZones(
     });
   }
 
-  const marqueur = {
+  if (!marqueur) return;
+
+  const repere = {
     type: 'FeatureCollection' as const,
     features: [
       {
@@ -140,9 +155,9 @@ function poseZones(
   };
   const sourcePoint = carte.getSource('adresse');
   if (sourcePoint !== undefined && 'setData' in sourcePoint) {
-    (sourcePoint as import('maplibre-gl').GeoJSONSource).setData(marqueur);
+    (sourcePoint as import('maplibre-gl').GeoJSONSource).setData(repere);
   } else {
-    carte.addSource('adresse', { type: 'geojson', data: marqueur });
+    carte.addSource('adresse', { type: 'geojson', data: repere });
     carte.addLayer({
       id: 'adresse-point',
       type: 'circle',

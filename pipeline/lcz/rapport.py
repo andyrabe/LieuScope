@@ -64,7 +64,7 @@ def ecris_le_rapport(
     temoins: list[dict],
     colonne_classe: str,
     colonnes: list[str] | None = None,
-    apercu_communes: str = "",
+    communes_ecartees: int = 0,
 ) -> None:
     total_octets = sum(poids.values())
     plus_lourde = max(poids.items(), key=lambda p: p[1], default=("aucune", 0))
@@ -99,11 +99,8 @@ def ecris_le_rapport(
         f"- Tuiles écrites : {len(poids)} (zoom {meta['zoom']})",
         f"- Poids total : {total_octets / 1024 / 1024:.1f} Mo",
         f"- Tuile la plus lourde : `{plus_lourde[0]}`, {plus_lourde[1] / 1024:.0f} Ko (budget 300 Ko)",
-        f"- Communes décrites : {len(communes)}",
-        "",
-        "## Piste pour les pages par commune",
-        "",
-        f"- CSV des communes couvertes : {apercu_communes or 'non inspecté'}",
+        f"- Communes décrites : {len(communes)}"
+        + (f" ({communes_ecartees} écartées, non situées)" if communes_ecartees else ""),
         "",
         "## Adresses témoins",
         "",

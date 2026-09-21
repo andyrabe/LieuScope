@@ -1,18 +1,21 @@
 import { readFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-import type { NiveauCle } from './verdict/types.js';
 
 /** Une commune couverte, telle que le pipeline la décrit. */
 export interface Commune {
+  /** Code INSEE, qui identifie la commune sans ambiguïté. */
   insee: string;
   nom: string;
+  /** Identifiant d'adresse web, ex. « villeurbanne-69266 ». */
   slug: string;
-  /** Centre approximatif [longitude, latitude], pour le lien vers la carte. */
-  centre: [number, number];
-  /** Part de la surface de la commune par niveau de sensibilité, en pourcents. */
-  parts: Partial<Record<NiveauCle, number>>;
-  /** Niveau le plus représenté. */
-  dominante: NiveauCle;
+  /** Population légale, quand le producteur la donne. */
+  population: number | null;
+  /** Part de la commune couverte par les données, en pourcents. */
+  couverture: number;
+  departement: string;
+  region: string;
+  /** Centre de la commune [longitude, latitude], pour centrer la carte. */
+  centre: number[];
 }
 
 export interface Couverture {

@@ -15,6 +15,7 @@ const zoneCarte = document.getElementById('carte-zone');
 
 if (champ !== null && liste !== null && message !== null && bloc !== null) {
   brancheChamp(champ, liste);
+  prepareDepuisLaCommune(champ);
   void depuisLUrl(champ);
 }
 
@@ -198,6 +199,19 @@ function retiensDansLUrl(suggestion: Suggestion): void {
   url.searchParams.set('lon', suggestion.lon.toFixed(6));
   url.searchParams.set('lat', suggestion.lat.toFixed(6));
   window.history.replaceState(null, '', url);
+}
+
+/**
+ * Arrivée depuis une page de commune : on pose le nom de la commune dans le
+ * champ, curseur au début, pour qu'il n'y ait plus que la rue à taper.
+ */
+function prepareDepuisLaCommune(champ: HTMLInputElement): void {
+  const params = new URLSearchParams(window.location.search);
+  const commune = params.get('commune');
+  if (commune === null || commune.length === 0 || params.has('a')) return;
+  champ.value = `, ${commune}`;
+  champ.focus();
+  champ.setSelectionRange(0, 0);
 }
 
 async function depuisLUrl(champ: HTMLInputElement): Promise<void> {

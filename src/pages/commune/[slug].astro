@@ -1,7 +1,7 @@
 ---
 import Base from '../../layouts/Base.astro';
 import { couverture, type Commune } from '../../lib/communes';
-import { ECHELLE, LIBELLE_NIVEAU, COULEUR_NIVEAU } from '../../lib/verdict/lcz';
+import { CLASSES_LCZ, COULEUR_NIVEAU, ECHELLE, LIBELLE_NIVEAU } from '../../lib/verdict/lcz';
 
 export function getStaticPaths() {
   const { communes, aire, millesime } = couverture();
@@ -20,48 +20,73 @@ interface Props {
 const { commune, aire, millesime } = Astro.props;
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-const repartition = [...ECHELLE]
-  .reverse()
-  .map((niveau) => ({ niveau, part: commune.parts[niveau] ?? 0 }))
-  .filter((ligne) => ligne.part > 0);
+const habitants =
+  commune.population === null
+    ? null
+    : new Intl.NumberFormat('fr-FR').format(commune.population);
 
-const dominante = LIBELLE_NIVEAU[commune.dominante];
-const partDominante = commune.parts[commune.dominante] ?? 0;
+const couvertureEntiere = commune.couverture >= 99.5;
+const phraseCouverture = couvertureEntiere
+  ? `Toute la commune est couverte par les données.`
+  : `${Math.round(commune.couverture)} % de la commune est couvert par les données ; ailleurs, LieuScope le dira sans donner de verdict.`;
 
-const phrase = `À ${commune.nom}, la sensibilité à la surchauffe la plus répandue est ${dominante} : elle concerne ${partDominante} % de la surface bâtie et non bâtie de la commune.`;
+const niveaux = [...ECHELLE].reverse().map((niveau) => ({
+  cle: niveau,
+  libelle: LIBELLE_NIVEAU[niveau],
+  couleur: COULEUR_NIVEAU[niveau],
+  classes: CLASSES_LCZ.filter((c) => c.niveau === niveau)
+    .map((c) => c.libelle.toLowerCase())
+    .join(', '),
+}));
+
+const aUnCentre = commune.centre.length === 2;
 ---
 
 <Base
   titre={`Chaleur à ${commune.nom} — LieuScope`}
-  description={`Sensibilité à la surchauffe à ${commune.nom} : ce que disent les zones climatiques locales du Cerema, rue par rue.`}
+  description={`Quels îlots de ${commune.nom} sont les plus sensibles à la surchauffe ? Saisissez votre adresse : verdict, carte et sources, d'après les zones climatiques locales du Cerema.`}
   chemin={`/commune/${commune.slug}`}
 >
   <h1>La chaleur à {commune.nom}</h1>
-  <p class="intro">{phrase}</p>
+  <p class="intro">
+    {habitants === null ? '' : `${habitants} habitants, `}{commune.departement} ({commune.region}).{' '}
+    {phraseCouverture}
+  </p>
 
-  <h2>Répartition de la commune</h2>
-  <ul class="legende">
-    {
-      repartition.map((ligne) => (
-        <li>
-          <span class="pastille" style={`background:${COULEUR_NIVEAU[ligne.niveau]}`} aria-hidden="true"></span>
-          <span>
-            Sensibilité {LIBELLE_NIVEAU[ligne.niveau]} : {ligne.part} % de la commune
-          </span>
-        </li>
-      ))
-    }
-  </ul>
-
-  <h2>Votre adresse à {commune.nom}</h2>
+  <h2>Voir votre rue</h2>
   <p>
-    Le chiffre ci-dessus vaut pour la commune entière. D'une rue à l'autre,
-    l'écart est souvent plus grand qu'entre deux communes : un centre ancien
-    serré et un lotissement avec jardins ne se ressemblent pas.
+    D'une rue à l'autre, l'écart est souvent plus grand qu'entre deux communes :
+    un centre ancien serré et un lotissement avec jardins ne se ressemblent pas.
+    Le verdict se donne donc à l'adresse, pas à la commune.
   </p>
   <p>
-    <a href={`${base}/?commune=${commune.slug}`}>Saisir une adresse à {commune.nom}</a>
+    <a href={`${base}/?commune=${encodeURIComponent(commune.nom)}`}>
+      Saisir une adresse à {commune.nom}
+    </a>
   </p>
+
+  {
+    aUnCentre && (
+      <section class="carte-zone" id="carte-zone" data-lon={commune.centre[0]} data-lat={commune.centre[1]}>
+        <h2>Les îlots de {commune.nom}</h2>
+        <div id="carte" role="img" aria-label={`Carte des zones climatiques locales de ${commune.nom}`}></div>
+        <ul class="legende">
+          {niveaux.map((niveau) => (
+            <li>
+              <span class="pastille" style={`background:${niveau.couleur}`} aria-hidden="true"></span>
+              <span>
+                Sensibilité {niveau.libelle} — {niveau.classes}
+              </span>
+            </li>
+          ))}
+        </ul>
+        <p class="aide">
+          La carte montre la forme des îlots, pas une température. Le point exact
+          compte : cherchez votre adresse pour obtenir un verdict et ses sources.
+        </p>
+      </section>
+    )
+  }
 
   <h2>D'où vient ce résultat</h2>
   <p>
@@ -71,4 +96,8 @@ const phrase = `À ${commune.nom}, la sensibilité à la surchauffe la plus rép
     expliqué sur la page <a href={`${base}/methode`}>Méthode</a>.
   </p>
   <p class="source">Source : Cerema, {millesime} — aire de {aire}.</p>
+
+  <script>
+    import '../../scripts/commune';
+  </script>
 </Base>

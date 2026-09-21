@@ -9,7 +9,6 @@ ne touche à rien d'autre. Il écrit un rapport dans pipeline/rapports/lcz.md.
 from __future__ import annotations
 
 import argparse
-import csv
 import json
 import shutil
 import time
@@ -23,13 +22,13 @@ from pipeline.common.source import (
     millesime_de_la_ressource,
     ressource_de_l_aire,
     ressource_des_communes,
-    slug,
     telecharge,
 )
 from pipeline.common.tuiles import ZOOM_LCZ
-from pipeline.common.verdict import PAR_CODE, code_interne
+from pipeline.common.verdict import code_interne
 from pipeline.lcz import JEU
-from pipeline.lcz.colonnes import colonne_classe, colonne_commune, colonne_insee
+from pipeline.lcz.colonnes import colonne_classe
+from pipeline.lcz.communes import communes_de_l_aire
 from pipeline.lcz.decoupe import ecris_les_tuiles, range_par_tuile
 from pipeline.lcz.rapport import ecris_le_rapport, verifie_les_temoins
 
@@ -63,8 +62,6 @@ def main() -> int:
     etape(f"{total_brut} objets lus ; colonnes : {', '.join(colonnes)}", debut)
 
     classe = colonne_classe(zones)
-    insee = colonne_insee(zones)
-    nom_commune = colonne_commune(zones)
     print(f"Colonne des classes : {classe}", flush=True)
 
     zones["code_lcz"] = zones[classe].map(code_interne)
@@ -78,16 +75,10 @@ def main() -> int:
             "impossible de le reprojeter sans risque."
         )
 
+    communes, communes_ecartees = lis_les_communes(jeu, arguments.aire)
+    etape(f"{len(communes)} communes retenues, {communes_ecartees} écartées", debut)
+
     metres = zones.to_crs(LAMBERT93)
-    surfaces = metres.geometry.area
-
-    # Les communes se calculent sur les zones d'origine : la fusion ci-dessous
-    # efface le rattachement communal.
-    communes = repartition_par_commune(
-        zones.to_crs("EPSG:4326"), surfaces, insee, nom_commune
-    )
-    etape(f"{len(communes)} communes décrites", debut)
-
     # Le jeu vient d'une image satellite : des milliers de petites zones
     # voisines portent la même classe et se touchent. Les fusionner d'abord
     # supprime toutes leurs frontières communes, ce qui allège énormément la
@@ -116,7 +107,6 @@ def main() -> int:
         debut,
     )
 
-    apercu_communes = inspecte_les_communes(jeu)
     millesime = millesime_de_la_ressource(ressource, jeu)
     meta = {
         "couche": "lcz",
@@ -131,7 +121,11 @@ def main() -> int:
     ecris_json(dossier / "meta.json", meta)
     ecris_json(
         dossier / "communes.json",
-        {"aire": arguments.aire, "millesime": millesime, "communes": communes},
+        {
+            "aire": arguments.aire,
+            "millesime": millesime,
+            "communes": [vars(commune) | {"centre": list(commune.centre or [])} for commune in communes],
+        },
     )
 
     temoins = verifie_les_temoins(RACINE / "data" / "temoins.json", dossier, arguments.zoom)
@@ -149,7 +143,7 @@ def main() -> int:
         temoins=temoins,
         colonne_classe=classe,
         colonnes=colonnes,
-        apercu_communes=apercu_communes,
+        communes_ecartees=communes_ecartees,
     )
 
     ecarts = [t for t in temoins if t["ecart"] and t["confirme"]]
@@ -161,81 +155,18 @@ def main() -> int:
     return 0
 
 
-def repartition_par_commune(zones, surfaces, insee: str | None, nom: str | None) -> list[dict]:
-    """Part de chaque niveau de sensibilité dans chaque commune, en pourcents.
+def lis_les_communes(jeu, aire: str) -> tuple[list, int]:
+    """Communes couvertes par l'aire, d'après le CSV publié à côté du jeu.
 
-    Le jeu ne porte pas toujours le rattachement communal : dans ce cas la liste
-    est vide, et aucune page de commune n'est construite. Mieux vaut pas de page
-    qu'une page vide.
-    """
-    if insee is None and nom is None:
-        return []
-    cle = insee or nom
-    travail = zones.copy()
-    travail["surface"] = surfaces.reindex(travail.index)
-    travail["niveau"] = travail["code_lcz"].map(lambda c: PAR_CODE[c].niveau)
-
-    resultat: list[dict] = []
-    for valeur, groupe in travail.groupby(cle):
-        totale = float(groupe["surface"].sum())
-        if totale <= 0:
-            continue
-        parts = {
-            str(niveau): round(float(part["surface"].sum()) / totale * 100)
-            for niveau, part in groupe.groupby("niveau")
-        }
-        dominante = max(parts, key=lambda n: parts[n])
-        libelle = str(groupe[nom].iloc[0]) if nom is not None else str(valeur)
-        # Centre de l'emprise de la commune : fusionner toutes ses zones pour
-        # en prendre le centroïde exact coûterait des minutes pour un point qui
-        # ne sert qu'à centrer une carte.
-        ouest, sud, est, nord = groupe.total_bounds
-        resultat.append(
-            {
-                "insee": str(valeur) if insee is not None else "",
-                "nom": libelle,
-                "slug": slug(libelle),
-                "centre": [round((ouest + est) / 2, 5), round((sud + nord) / 2, 5)],
-                "parts": parts,
-                "dominante": dominante,
-            }
-        )
-    return sorted(resultat, key=lambda commune: commune["nom"])
-
-
-def inspecte_les_communes(jeu) -> str:
-    """Regarde ce que contient le CSV des communes couvertes, s'il existe.
-
-    Le jeu du Cerema ne rattache pas ses zones à une commune. Ce fichier est la
-    piste la plus simple pour construire une page par commune : on relève ce
-    qu'il contient avant d'écrire quoi que ce soit.
+    Le fichier des zones ne porte aucun rattachement communal : c'est ce CSV,
+    publié par le même producteur, qui dit quelle commune est couverte par
+    quelle aire.
     """
     ressource = ressource_des_communes(jeu)
     if ressource is None:
-        return "aucune ressource « communes » dans le jeu"
-    try:
-        fichier = telecharge(ressource)
-        with fichier.open(encoding="utf-8-sig", errors="replace", newline="") as lecture:
-            table = list(csv.DictReader(lecture, delimiter=";"))
-    except Exception as souci:  # noqa: BLE001 — diagnostic, jamais bloquant
-        return f"lecture impossible ({souci})"
-    if not table:
-        return f"`{ressource.titre}` — fichier vide"
-
-    couvertes = [
-        ligne
-        for ligne in table
-        if (ligne.get("couverture_lcz") or "0").replace(",", ".").strip() not in {"", "0", "0.00"}
-    ]
-    exemple = couvertes[0] if couvertes else table[0]
-    detail = str(exemple.get("detail_couverture_lcz", ""))
-    return (
-        f"`{ressource.titre}` — {len(table)} communes, dont {len(couvertes)} couvertes.\n"
-        f"  - Colonnes : `{', '.join(table[0].keys())}`\n"
-        f"  - Exemple couvert : `{exemple.get('commune')}` "
-        f"({exemple.get('insee_commune')}), couverture `{exemple.get('couverture_lcz')}`\n"
-        f"  - Détail de cette commune : `{detail[:400]}`"
-    )
+        print("Aucun CSV de communes dans le jeu : aucune page de commune.", flush=True)
+        return [], 0
+    return communes_de_l_aire(telecharge(ressource), aire)
 
 
 def chemin_lisible(fichier: Path) -> str:
