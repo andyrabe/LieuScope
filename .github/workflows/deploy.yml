@@ -2,7 +2,10 @@ name: Mise en ligne
 
 on:
   push:
-    branches: [main]
+    # L'environnement « github-pages » n'accepte les mises en ligne que depuis
+    # la branche par défaut du dépôt. Celle-ci est encore la branche de travail :
+    # on la garde ici tant que la branche par défaut n'est pas passée à main.
+    branches: [main, 'claude/validation-automatique-etapes-870mpp']
   workflow_dispatch:
 
 permissions:
