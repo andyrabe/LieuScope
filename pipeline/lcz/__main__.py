@@ -9,6 +9,7 @@ ne touche à rien d'autre. Il écrit un rapport dans pipeline/rapports/lcz.md.
 from __future__ import annotations
 
 import argparse
+import csv
 import json
 import shutil
 import time
@@ -214,16 +215,26 @@ def inspecte_les_communes(jeu) -> str:
         return "aucune ressource « communes » dans le jeu"
     try:
         fichier = telecharge(ressource)
-        with fichier.open(encoding="utf-8-sig", errors="replace") as lecture:
-            entete = lecture.readline().strip()
-            exemple = lecture.readline().strip()
-            lignes = 2 + sum(1 for _ in lecture)
+        with fichier.open(encoding="utf-8-sig", errors="replace", newline="") as lecture:
+            table = list(csv.DictReader(lecture, delimiter=";"))
     except Exception as souci:  # noqa: BLE001 — diagnostic, jamais bloquant
         return f"lecture impossible ({souci})"
+    if not table:
+        return f"`{ressource.titre}` — fichier vide"
+
+    couvertes = [
+        ligne
+        for ligne in table
+        if (ligne.get("couverture_lcz") or "0").replace(",", ".").strip() not in {"", "0", "0.00"}
+    ]
+    exemple = couvertes[0] if couvertes else table[0]
+    detail = str(exemple.get("detail_couverture_lcz", ""))
     return (
-        f"`{ressource.titre}` — {lignes} lignes.\n"
-        f"  - En-tête : `{entete[:300]}`\n"
-        f"  - Première ligne : `{exemple[:300]}`"
+        f"`{ressource.titre}` — {len(table)} communes, dont {len(couvertes)} couvertes.\n"
+        f"  - Colonnes : `{', '.join(table[0].keys())}`\n"
+        f"  - Exemple couvert : `{exemple.get('commune')}` "
+        f"({exemple.get('insee_commune')}), couverture `{exemple.get('couverture_lcz')}`\n"
+        f"  - Détail de cette commune : `{detail[:400]}`"
     )
 
 
