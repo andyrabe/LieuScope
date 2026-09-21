@@ -34,8 +34,10 @@ en haut.
 - **Ville pilote : Lyon.** Aire urbaine couverte par le jeu, assez grande pour
   montrer tous les cas (centre compact, parcs, industrie, périurbain). Facile à
   changer : un seul paramètre, `--aire`, dans `data.yml`.
-- **Dépôt public**, comme recommandé : transparence, et les minutes d'Actions ne
-  sont pas décomptées.
+- **Dépôt privé** (constaté après coup : j'avais d'abord écrit « public » par
+  erreur). Conséquence à surveiller : les minutes d'Actions sont décomptées
+  (3 000 par mois), et chaque exécution du pipeline en consomme. Le passage en
+  public reste recommandé ; c'est un réglage dans Settings du dépôt.
 - **Licence MIT**, nom **LieuScope**, adresse provisoire
   `https://andyrabe.github.io/LieuScope/`.
 - **Quatre niveaux de sensibilité** plutôt que cinq : au-delà, les libellés se
@@ -54,6 +56,22 @@ en haut.
   Actions** (`data.yml`, bouton « Run workflow »), exactement comme prévu par
   les consignes. Tant qu'il n'a pas tourné, `public/data/lcz/` est vide et le
   site affiche « les données ne sont pas encore publiées ».
+
+### Mise en ligne, ce qui a bloqué
+
+- Pages n'était pas activé : `deploy.yml` l'active désormais lui-même
+  (`enablement: true`), sans réglage manuel.
+- La première publication a échoué sans journal, en une seconde.
+  Cause trouvée : l'environnement `github-pages` n'autorise les mises en ligne
+  que depuis la **branche par défaut** du dépôt, et celle-ci est encore
+  `claude/validation-automatique-etapes-870mpp`, pas `main`. `deploy.yml`
+  accepte donc les deux pour l'instant ; à ramener à `main` seul dès que la
+  branche par défaut aura été changée.
+- Publication réussie le 21 septembre à 00:39 depuis la branche par défaut.
+  Je n'ai pas pu ouvrir `andyrabe.github.io` moi-même : ce domaine est bloqué
+  depuis mon environnement. À vérifier sur téléphone.
+- L'API ne me laisse ni déclencher un atelier (« Run workflow »), ni changer la
+  branche par défaut, ni changer la visibilité du dépôt : 403 à chaque fois.
 
 ### Ajouté dans la foulée
 

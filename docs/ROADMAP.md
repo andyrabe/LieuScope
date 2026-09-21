@@ -4,13 +4,17 @@ Mise à jour : 21 septembre 2026. Étape en cours : **étape 1**.
 
 ## Étape 0 — mise en place ✔ (code prêt, reste un clic côté GitHub)
 
-- [x] Décisions : ville pilote **Lyon**, dépôt **public**, nom **LieuScope**, licence **MIT**.
+- [x] Décisions : ville pilote **Lyon**, nom **LieuScope**, licence **MIT**.
+- [ ] Dépôt encore **privé** : passage en public recommandé (minutes d'Actions gratuites).
+- [ ] Branche par défaut encore `claude/…` : à passer à `main`, puis retirer la
+      branche de travail des déclencheurs de `deploy.yml`.
 - [x] Squelette Astro en sortie statique, TypeScript strict, CSS à variables.
 - [x] `deploy.yml` (construction et publication sur GitHub Pages à chaque `main`).
 - [x] `ci.yml` (types, tests, construction, contrôle de poids sur chaque PR).
 - [x] `data.yml` (exécution du pipeline dans Actions, `workflow_dispatch`).
 - [x] JOURNAL, ROADMAP, MÉTHODE, SOURCES, `.gitignore`, LICENSE.
-- [ ] **À faire par elle** : activer Pages (Settings → Pages → Source : GitHub Actions).
+- [x] Pages activé automatiquement par `deploy.yml` (`enablement: true`).
+- [x] Première mise en ligne réussie le 21 septembre 2026.
 - [ ] Terminé quand le site s'ouvre sur son téléphone.
 
 ## Étape 1 — la chaleur sur la ville pilote (en cours)
