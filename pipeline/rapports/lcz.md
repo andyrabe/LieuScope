@@ -17,6 +17,7 @@ Aire traitée : **Lyon**. Exécution du 2026-09-21.
 - Objets retenus : 63561
 - Classes illisibles écartées : 0 (0.0 %)
 - Colonne des classes : `lcz`
+- Colonnes présentes dans le fichier du producteur : `identifier`, `hre`, `are`, `bur`, `ror`, `bsr`, `war`, `ver`, `vhr`, `lcz`, `lcz_int`, `geometry`
 - Emprise (ouest, sud, est, nord) : 4.4294, 45.3964, 5.3833, 46.1136
 
 ## Sorties
@@ -25,6 +26,13 @@ Aire traitée : **Lyon**. Exécution du 2026-09-21.
 - Poids total : 23.5 Mo
 - Tuile la plus lourde : `14/8412/5844.json`, 100 Ko (budget 300 Ko)
 - Communes décrites : 0
+
+## Piste pour les pages par commune
+
+- CSV des communes couvertes : `Couverture LCZ par commune` — 34955 communes, dont 15321 couvertes.
+  - Colonnes : `commune, insee_commune, population, surface_ha, couverture_lcz, detail_couverture_lcz, epci, siren_epci, departement, insee_departement, region, insee_region`
+  - Exemple couvert : `Ambérieux-en-Dombes` (01005), couverture `100.00`
+  - Détail de cette commune : `Lyon = 100.00 %`
 
 ## Adresses témoins
 
