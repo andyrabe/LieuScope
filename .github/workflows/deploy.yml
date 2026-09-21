@@ -39,6 +39,14 @@ jobs:
       - run: npm run build
       - name: Contrôle de poids
         run: npm run poids
+
+      - name: Prévenir si la publication va être sautée
+        if: github.ref_name != github.event.repository.default_branch
+        run: |
+          echo "::warning::GitHub Pages n'accepte de publier que depuis la branche"
+          echo "::warning::par défaut du dépôt (${{ github.event.repository.default_branch }})."
+          echo "::warning::Le site a bien été construit, mais il ne sera pas publié depuis"
+          echo "::warning::${{ github.ref_name }}. Réglage : Settings du dépôt, « Default branch »."
       - uses: actions/upload-pages-artifact@v5
         with:
           path: dist
@@ -46,6 +54,10 @@ jobs:
   publier:
     name: Publier sur GitHub Pages
     needs: construire
+    # L'environnement « github-pages » refuse toute publication qui ne vient pas
+    # de la branche par défaut. Tenter quand même donnerait un échec rouge à
+    # chaque poussée, sans rien dire de l'état réel du site.
+    if: github.ref_name == github.event.repository.default_branch
     runs-on: ubuntu-latest
     environment:
       name: github-pages
