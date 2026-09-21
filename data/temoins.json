@@ -1,0 +1,30 @@
+{
+  "commentaire": "Adresses de contrôle. Le pipeline calcule le verdict à chaque exécution et le compare à « attendu ». Un écart bloque la mise en ligne. Tant que « confirme » vaut false, l'écart est signalé mais ne bloque pas : ce sont des attentes posées par Claude, pas encore vérifiées sur le terrain.",
+  "aire": "Lyon",
+  "temoins": [
+    {
+      "nom": "Place Bellecour, Lyon 2e",
+      "lon": 4.83223,
+      "lat": 45.75778,
+      "attendu": "tres_elevee",
+      "confirme": false,
+      "pourquoi": "Centre-ville très minéral, bâti compact de hauteur moyenne."
+    },
+    {
+      "nom": "Parc de la Tête d'Or, Lyon 6e",
+      "lon": 4.85306,
+      "lat": 45.77694,
+      "attendu": "faible",
+      "confirme": false,
+      "pourquoi": "Grand parc arboré : arbres denses, plan d'eau."
+    },
+    {
+      "nom": "Quartier pavillonnaire, Sainte-Foy-lès-Lyon",
+      "lon": 4.79556,
+      "lat": 45.73528,
+      "attendu": "moderee",
+      "confirme": false,
+      "pourquoi": "Maisons individuelles avec jardins, bâti ouvert de faible hauteur."
+    }
+  ]
+}
