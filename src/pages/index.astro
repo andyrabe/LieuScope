@@ -1,0 +1,96 @@
+---
+import Base from '../layouts/Base.astro';
+import { CLASSES_LCZ, COULEUR_NIVEAU, ECHELLE, LIBELLE_NIVEAU } from '../lib/verdict/lcz';
+
+const niveaux = [...ECHELLE].reverse().map((niveau) => ({
+  cle: niveau,
+  libelle: LIBELLE_NIVEAU[niveau],
+  couleur: COULEUR_NIVEAU[niveau],
+  classes: CLASSES_LCZ.filter((c) => c.niveau === niveau)
+    .map((c) => c.libelle.toLowerCase())
+    .join(', '),
+}));
+---
+
+<Base
+  titre="LieuScope — la chaleur dans votre rue"
+  description="Saisissez une adresse : LieuScope vous dit, en une phrase, la sensibilité de votre îlot à la surchauffe, d'après les zones climatiques locales du Cerema."
+>
+  <h1>La chaleur dans votre rue</h1>
+  <p class="intro">
+    Saisissez une adresse. Vous obtenez la sensibilité de votre îlot à la
+    surchauffe, ce que cela veut dire, ce que cela ne dit pas, et la source.
+  </p>
+
+  <div class="recherche">
+    <label for="adresse">Votre adresse ou le nom d'un lieu</label>
+    <input
+      id="adresse"
+      name="adresse"
+      type="search"
+      autocomplete="off"
+      autocapitalize="off"
+      spellcheck="false"
+      enterkeyhint="search"
+      placeholder="12 rue de la République, Lyon"
+      role="combobox"
+      aria-expanded="false"
+      aria-autocomplete="list"
+      aria-controls="suggestions"
+      aria-describedby="aide-adresse"
+    />
+    <p class="aide" id="aide-adresse">
+      Tapez au moins trois lettres, puis choisissez dans la liste. Votre adresse
+      sert uniquement à la recherche : elle n'est enregistrée nulle part.
+    </p>
+    <ul class="suggestions" id="suggestions" role="listbox" aria-label="Adresses proposées"></ul>
+  </div>
+
+  <p class="message" id="message" role="status" aria-live="polite" hidden></p>
+
+  <article class="verdict" id="verdict" hidden>
+    <p class="adresse" id="verdict-adresse"></p>
+    <p class="phrase" id="verdict-phrase"></p>
+    <p class="jauge" id="verdict-jauge"></p>
+    <p class="classe" id="verdict-classe"></p>
+    <div class="bloc">
+      <h3>Ce que cela veut dire</h3>
+      <p id="verdict-signifie"></p>
+    </div>
+    <div class="bloc">
+      <h3>Ce que cela ne dit pas</h3>
+      <p id="verdict-ne-dit-pas"></p>
+    </div>
+    <p class="source" id="verdict-source"></p>
+  </article>
+
+  <section class="carte-zone" id="carte-zone" hidden>
+    <h2>La carte qui le justifie</h2>
+    <div id="carte" role="img" aria-label="Carte des zones climatiques locales autour de l'adresse"></div>
+    <ul class="legende">
+      {
+        niveaux.map((niveau) => (
+          <li>
+            <span class="pastille" style={`background:${niveau.couleur}`} aria-hidden="true"></span>
+            <span>
+              Sensibilité {niveau.libelle} — {niveau.classes}
+            </span>
+          </li>
+        ))
+      }
+    </ul>
+  </section>
+
+  <h2>Comment lire ce résultat</h2>
+  <p>
+    Une zone climatique locale décrit la forme d'un îlot : hauteur et densité du
+    bâti, part de végétation, d'eau ou de sol nu. Elle indique une sensibilité
+    potentielle à la surchauffe. Ce n'est ni une température mesurée, ni un avis
+    sur un logement. Le détail du classement est expliqué sur la
+    page <a href={`${import.meta.env.BASE_URL.replace(/\/$/, '')}/methode`}>Méthode</a>.
+  </p>
+
+  <script>
+    import '../scripts/recherche';
+  </script>
+</Base>
