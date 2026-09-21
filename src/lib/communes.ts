@@ -1,5 +1,5 @@
 import { readFileSync, existsSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import type { NiveauCle } from './verdict/types.js';
 
 /** Une commune couverte, telle que le pipeline la décrit. */
@@ -21,7 +21,28 @@ export interface Couverture {
   communes: Commune[];
 }
 
-const CHEMIN = fileURLToPath(new URL('../../public/data/lcz/communes.json', import.meta.url));
+// Chemin depuis la racine du projet, pas depuis ce fichier : à la
+// construction, ce module s'exécute depuis dist/ et un chemin relatif à
+// lui-même pointe à côté. L'erreur est muette — aucune page ne serait
+// construite — d'où le contrôle ajouté dans scripts/poids.mjs.
+const DONNEES = join(process.cwd(), 'public', 'data', 'lcz');
+const CHEMIN = join(DONNEES, 'communes.json');
+const CHEMIN_META = join(DONNEES, 'meta.json');
+
+/** Ce que le pipeline a publié : l'aire traitée, ou null si rien n'est en ligne. */
+export function aireEnLigne(): { aire: string; millesime: string } | null {
+  if (!existsSync(CHEMIN_META)) return null;
+  try {
+    const meta = JSON.parse(readFileSync(CHEMIN_META, 'utf8')) as {
+      aire?: string;
+      millesime?: string;
+    };
+    if (meta.aire === undefined) return null;
+    return { aire: meta.aire, millesime: meta.millesime ?? '' };
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Lit la liste des communes couvertes, écrite par le pipeline.

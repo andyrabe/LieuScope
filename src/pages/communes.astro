@@ -1,8 +1,9 @@
 ---
 import Base from '../layouts/Base.astro';
-import { couverture } from '../lib/communes';
+import { aireEnLigne, couverture } from '../lib/communes';
 
 const { aire, communes } = couverture();
+const enLigne = aireEnLigne();
 const base = import.meta.env.BASE_URL.replace(/\/$/, '');
 const triees = [...communes].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
 ---
@@ -15,10 +16,27 @@ const triees = [...communes].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
   <h1>Communes couvertes</h1>
   {
     triees.length === 0 ? (
-      <p>
-        Les données ne sont pas encore publiées sur ce site. Dès la première
-        mise en ligne, la liste des communes couvertes apparaîtra ici.
-      </p>
+      enLigne === null ? (
+        <p>
+          Les données ne sont pas encore publiées sur ce site. Dès la première
+          mise en ligne, la liste des communes couvertes apparaîtra ici.
+        </p>
+      ) : (
+        <>
+          <p>
+            LieuScope couvre aujourd'hui l'aire de {enLigne.aire}. Saisissez
+            votre adresse sur la <a href={`${base}/`}>page d'accueil</a> : si
+            elle est couverte, vous obtiendrez un verdict ; sinon, le site vous
+            le dira clairement.
+          </p>
+          <p>
+            La liste commune par commune n'est pas encore disponible : le jeu de
+            données du Cerema décrit des îlots, sans indiquer à quelle commune
+            chacun appartient. La rattacher demande de croiser ces îlots avec le
+            découpage administratif, ce qui est prévu.
+          </p>
+        </>
+      )
     ) : (
       <>
         <p class="intro">

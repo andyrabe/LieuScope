@@ -19,6 +19,14 @@ const carteManquante = FICHIERS_CARTE.filter(
   (nom) => !existsSync(join(DIST, 'carte', nom)),
 );
 
+// Chaque commune décrite par le pipeline doit avoir sa page. Sans ce contrôle,
+// un chemin de données mal résolu ne construirait aucune page, en silence.
+const communesAttendues = compteCommunes();
+const communesConstruites = existsSync(join(DIST, 'commune'))
+  ? readdirSync(join(DIST, 'commune'), { withFileTypes: true }).filter((e) => e.isDirectory())
+      .length
+  : 0;
+
 let total = 0;
 const tuilesLourdes = [];
 
@@ -49,6 +57,14 @@ console.log(`Page d’accueil hors carte : ${(accueil / 1024).toFixed(1)} Ko (bu
 
 let echec = false;
 
+if (communesAttendues > 0 && communesConstruites !== communesAttendues) {
+  console.error(
+    `${communesAttendues} communes décrites dans les données, mais ` +
+      `${communesConstruites} page(s) construite(s) dans dist/commune/.`,
+  );
+  console.error('Les pages de commune ne sont pas générées : vérifiez src/lib/communes.ts.');
+  echec = true;
+}
 if (carteManquante.length > 0) {
   console.error(`Fichiers de la carte absents de dist/carte/ : ${carteManquante.join(', ')}.`);
   console.error('La carte s’ouvrirait vide. Lancez « node scripts/prepare-carte.mjs ».');
@@ -72,6 +88,18 @@ if (accueil > BUDGET_ACCUEIL_KO * 1024) {
 }
 
 process.exit(echec ? 1 : 0);
+
+/** Nombre de communes décrites par le pipeline, 0 si les données manquent. */
+function compteCommunes() {
+  const chemin = join('public', 'data', 'lcz', 'communes.json');
+  if (!existsSync(chemin)) return 0;
+  try {
+    const contenu = JSON.parse(readFileSync(chemin, 'utf8'));
+    return Array.isArray(contenu.communes) ? contenu.communes.length : 0;
+  } catch {
+    return 0;
+  }
+}
 
 /** HTML de l’accueil, plus les fichiers CSS et JS qu’il charge (hors carte). */
 function poidsAccueil() {
