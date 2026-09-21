@@ -43,12 +43,17 @@ jobs:
         run: |
           aire="${{ inputs.aire }}"
           if [ -z "$aire" ]; then aire=$(tr -d '\r\n' < data/aire-pilote.txt); fi
-          zoom="${{ inputs.zoom }}"
-          simplification="${{ inputs.simplification }}"
+          # Zoom et simplification restent vides par défaut : leurs valeurs
+          # vivent dans le pipeline, pas ici. Les fixer en double finissait par
+          # écraser silencieusement celles du code.
+          options=""
+          if [ -n "${{ inputs.zoom }}" ]; then options="$options --zoom ${{ inputs.zoom }}"; fi
+          if [ -n "${{ inputs.simplification }}" ]; then
+            options="$options --simplification ${{ inputs.simplification }}"
+          fi
           echo "aire=${aire}" >> "$GITHUB_OUTPUT"
-          echo "zoom=${zoom:-12}" >> "$GITHUB_OUTPUT"
-          echo "simplification=${simplification:-8}" >> "$GITHUB_OUTPUT"
-          echo "Aire retenue : ${aire}"
+          echo "options=${options}" >> "$GITHUB_OUTPUT"
+          echo "Aire retenue : ${aire}. Options : ${options:-aucune}"
 
       - uses: actions/setup-python@v7
         with:
@@ -61,8 +66,7 @@ jobs:
         run: |
           python -m pipeline.lcz \
             --aire "${{ steps.reglages.outputs.aire }}" \
-            --zoom "${{ steps.reglages.outputs.zoom }}" \
-            --simplification "${{ steps.reglages.outputs.simplification }}" \
+            ${{ steps.reglages.outputs.options }} \
             | tee pipeline-lcz.log
 
       - name: Vérifier le poids des données versionnées

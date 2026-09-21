@@ -10,6 +10,8 @@ from pathlib import Path
 import requests
 
 API = "https://www.data.gouv.fr/api/1"
+#: Une année à quatre chiffres, telle qu'elle apparaît dans un nom de fichier.
+ANNEE = re.compile(r"(?:19|20)\d{2}")
 RACINE = Path(__file__).resolve().parents[2]
 DOSSIER_BRUT = RACINE / "data" / "brut"
 
@@ -117,3 +119,17 @@ def telecharge(ressource: Ressource, *, delai: int = 300) -> Path:
                 fichier.write(morceau)
     provisoire.replace(cible)
     return cible
+
+
+def millesime_de_la_ressource(ressource: Ressource, jeu: Jeu) -> str:
+    """Millésime de la donnée elle-même, pas de sa mise en ligne.
+
+    Le nom du fichier le porte presque toujours (« lcz-spot-2022-lyon.zip ») ;
+    la date de dernière modification du jeu, elle, change à chaque correction
+    de fiche et afficherait une année fausse à côté du verdict.
+    """
+    for texte in (ressource.titre, ressource.url):
+        trouve = ANNEE.search(texte)
+        if trouve is not None:
+            return trouve.group(0)
+    return jeu.millesime[:4] if jeu.millesime else "millésime inconnu"

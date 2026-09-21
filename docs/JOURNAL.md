@@ -107,6 +107,38 @@ Le zoom doit être identique côté site et côté pipeline ; un test le vérifi
 désormais (`test_le_meme_zoom_des_deux_cotes`), comme il vérifiait déjà que les
 dix-sept classes sont décrites pareil des deux côtés.
 
+### Deuxième exécution : le budget de poids est tenu, trois défauts trouvés
+
+La fusion et la découpe au bord des tuiles font passer le poids total de
+**656 Mo à 30,3 Mo**, soit vingt fois moins, sans rien changer aux verdicts.
+81 048 zones lues, 63 561 après fusion. Trois défauts restaient :
+
+1. **`data.yml` imposait `--zoom 12 --simplification 8` en dur**, ce qui
+   écrasait silencieusement les valeurs du pipeline (14 et 40). Les données ont
+   donc été écrites au zoom 12 alors que le site cherche au zoom 14 : il
+   n'aurait rien trouvé. L'atelier ne fixe plus ces valeurs ; elles vivent dans
+   le pipeline, à un seul endroit.
+2. **La tuile la plus lourde faisait 861 Ko**, au-dessus du budget de 300 Ko.
+   C'est ce que le zoom 14 corrige.
+3. **Le millésime affiché était `2026-07-21`**, la date de dernière
+   modification de la fiche data.gouv.fr, pas celle de la donnée. Le nom du
+   fichier la porte (`lcz-spot-2022-lyon.zip`) : on la lit là, avec la date de
+   fiche en repli.
+
+Autres constats de ce rapport :
+
+- **Aucune colonne de rattachement communal** dans le jeu : `communes.json` est
+  vide et aucune page de commune n'est construite. Il faudra croiser avec un
+  découpage administratif à l'étape 2.
+- **Les ateliers n'ont pas le droit d'ouvrir une pull request** sur ce dépôt
+  (« GitHub Actions is not permitted to create or approve pull requests »). La
+  branche de données est bien poussée ; la pull request s'ouvre à la main.
+- **Deux témoins sur trois sont en écart**, et c'est instructif : Place
+  Bellecour ressort en classe E (revêtement imperméable) et non en bâti
+  compact — le point tombe sur l'esplanade elle-même, pas sur les immeubles.
+  Ces attentes venaient de moi, pas du terrain : elles ne bloquent pas, et
+  elles sont à revoir avec elle.
+
 ### Prochaine étape
 
 1. Fusionner la pull request, activer Pages, vérifier que le site s'ouvre.

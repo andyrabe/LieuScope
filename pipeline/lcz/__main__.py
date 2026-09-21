@@ -19,6 +19,7 @@ import geopandas
 
 from pipeline.common.source import (
     lis_le_jeu,
+    millesime_de_la_ressource,
     ressource_de_l_aire,
     slug,
     telecharge,
@@ -112,12 +113,13 @@ def main() -> int:
         debut,
     )
 
+    millesime = millesime_de_la_ressource(ressource, jeu)
     meta = {
         "couche": "lcz",
         "zoom": arguments.zoom,
         "aire": arguments.aire,
         "producteur": jeu.producteur,
-        "millesime": jeu.millesime,
+        "millesime": millesime,
         "telecharge": date.today().isoformat(),
         "licence": jeu.licence,
         "url": jeu.page,
@@ -125,7 +127,7 @@ def main() -> int:
     ecris_json(dossier / "meta.json", meta)
     ecris_json(
         dossier / "communes.json",
-        {"aire": arguments.aire, "millesime": jeu.millesime, "communes": communes},
+        {"aire": arguments.aire, "millesime": millesime, "communes": communes},
     )
 
     temoins = verifie_les_temoins(RACINE / "data" / "temoins.json", dossier, arguments.zoom)

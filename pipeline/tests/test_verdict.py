@@ -44,3 +44,26 @@ def test_niveau_du_code():
 
 def test_industrie_lourde_est_au_maximum():
     assert PAR_CODE[10].niveau == ECHELLE[-1]
+
+
+def test_millesime_lu_dans_le_nom_du_fichier():
+    """Le nom du fichier porte l'année de la donnée ; la fiche porte celle de sa mise à jour."""
+    from pipeline.common.source import Jeu, Ressource, millesime_de_la_ressource
+
+    jeu = Jeu(
+        identifiant="x",
+        titre="t",
+        producteur="Cerema",
+        licence="lov2",
+        page="https://example.org",
+        millesime="2026-07-21",
+        ressources=(),
+    )
+    spot = Ressource("LCZ SPOT 2022 Lyon", "https://ex.org/lcz-spot-2022-lyon.zip", "zip", 1)
+    assert millesime_de_la_ressource(spot, jeu) == "2022"
+
+    sans_annee = Ressource("LCZ Lyon", "https://ex.org/lcz-lyon.zip", "zip", 1)
+    assert millesime_de_la_ressource(sans_annee, jeu) == "2026"
+
+    muet = Jeu("x", "t", "Cerema", "lov2", "https://ex.org", "", ())
+    assert millesime_de_la_ressource(sans_annee, muet) == "millésime inconnu"

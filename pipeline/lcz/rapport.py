@@ -78,7 +78,7 @@ def ecris_le_rapport(
         f"- Jeu : {jeu.titre} (`{jeu.identifiant}`)",
         f"- Producteur : {jeu.producteur}",
         f"- Licence : {jeu.licence}",
-        f"- Millésime retenu : {jeu.millesime}",
+        f"- Millésime retenu : {meta['millesime']} (le jeu a été mis à jour le {jeu.millesime})",
         f"- Ressource : {ressource.titre} ({ressource.format})",
         f"- Page : {jeu.page}",
         "",
