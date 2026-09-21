@@ -13,9 +13,12 @@ permissions:
   pages: write
   id-token: write
 
-# Une seule mise en ligne à la fois ; on laisse finir celle qui est en cours.
+# Une seule mise en ligne à la fois par branche ; on laisse finir celle qui est
+# en cours. La file est propre à chaque branche : sans cela, une poussée sur
+# main annulait la mise en ligne de la branche par défaut, seule autorisée à
+# publier, et le site restait sur sa version précédente.
 concurrency:
-  group: pages
+  group: pages-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
