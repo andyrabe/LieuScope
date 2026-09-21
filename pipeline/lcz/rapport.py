@@ -63,6 +63,8 @@ def ecris_le_rapport(
     communes: list[dict],
     temoins: list[dict],
     colonne_classe: str,
+    colonnes: list[str] | None = None,
+    apercu_communes: str = "",
 ) -> None:
     total_octets = sum(poids.values())
     plus_lourde = max(poids.items(), key=lambda p: p[1], default=("aucune", 0))
@@ -88,6 +90,8 @@ def ecris_le_rapport(
         f"- Objets retenus : {retenues}",
         f"- Classes illisibles écartées : {manquantes} ({part_manquante:.1f} %)",
         f"- Colonne des classes : `{colonne_classe}`",
+        "- Colonnes présentes dans le fichier du producteur : "
+        + (", ".join(f"`{c}`" for c in colonnes) if colonnes else "non relevées"),
         f"- Emprise (ouest, sud, est, nord) : {emprise[0]:.4f}, {emprise[1]:.4f}, {emprise[2]:.4f}, {emprise[3]:.4f}",
         "",
         "## Sorties",
@@ -96,6 +100,10 @@ def ecris_le_rapport(
         f"- Poids total : {total_octets / 1024 / 1024:.1f} Mo",
         f"- Tuile la plus lourde : `{plus_lourde[0]}`, {plus_lourde[1] / 1024:.0f} Ko (budget 300 Ko)",
         f"- Communes décrites : {len(communes)}",
+        "",
+        "## Piste pour les pages par commune",
+        "",
+        f"- CSV des communes couvertes : {apercu_communes or 'non inspecté'}",
         "",
         "## Adresses témoins",
         "",

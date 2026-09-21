@@ -21,6 +21,7 @@ from pipeline.common.source import (
     lis_le_jeu,
     millesime_de_la_ressource,
     ressource_de_l_aire,
+    ressource_des_communes,
     slug,
     telecharge,
 )
@@ -57,7 +58,8 @@ def main() -> int:
     etape(f"Fichier local : {fichier.name}", debut)
     zones = geopandas.read_file(chemin_lisible(fichier))
     total_brut = len(zones)
-    etape(f"{total_brut} objets lus", debut)
+    colonnes = [str(c) for c in zones.columns]
+    etape(f"{total_brut} objets lus ; colonnes : {', '.join(colonnes)}", debut)
 
     classe = colonne_classe(zones)
     insee = colonne_insee(zones)
@@ -113,6 +115,7 @@ def main() -> int:
         debut,
     )
 
+    apercu_communes = inspecte_les_communes(jeu)
     millesime = millesime_de_la_ressource(ressource, jeu)
     meta = {
         "couche": "lcz",
@@ -144,6 +147,8 @@ def main() -> int:
         communes=communes,
         temoins=temoins,
         colonne_classe=classe,
+        colonnes=colonnes,
+        apercu_communes=apercu_communes,
     )
 
     ecarts = [t for t in temoins if t["ecart"] and t["confirme"]]
@@ -195,6 +200,31 @@ def repartition_par_commune(zones, surfaces, insee: str | None, nom: str | None)
             }
         )
     return sorted(resultat, key=lambda commune: commune["nom"])
+
+
+def inspecte_les_communes(jeu) -> str:
+    """Regarde ce que contient le CSV des communes couvertes, s'il existe.
+
+    Le jeu du Cerema ne rattache pas ses zones à une commune. Ce fichier est la
+    piste la plus simple pour construire une page par commune : on relève ce
+    qu'il contient avant d'écrire quoi que ce soit.
+    """
+    ressource = ressource_des_communes(jeu)
+    if ressource is None:
+        return "aucune ressource « communes » dans le jeu"
+    try:
+        fichier = telecharge(ressource)
+        with fichier.open(encoding="utf-8-sig", errors="replace") as lecture:
+            entete = lecture.readline().strip()
+            exemple = lecture.readline().strip()
+            lignes = 2 + sum(1 for _ in lecture)
+    except Exception as souci:  # noqa: BLE001 — diagnostic, jamais bloquant
+        return f"lecture impossible ({souci})"
+    return (
+        f"`{ressource.titre}` — {lignes} lignes.\n"
+        f"  - En-tête : `{entete[:300]}`\n"
+        f"  - Première ligne : `{exemple[:300]}`"
+    )
 
 
 def chemin_lisible(fichier: Path) -> str:
