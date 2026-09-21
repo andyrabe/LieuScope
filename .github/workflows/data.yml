@@ -1,0 +1,93 @@
+name: Préparer les données
+
+# À lancer à la main : onglet Actions, « Préparer les données », « Run workflow ».
+# Le traitement télécharge le jeu du Cerema, découpe les zones en petits
+# fichiers, écrit un rapport, puis ouvre une pull request avec le résultat.
+# Rien ne part en ligne sans cette pull request.
+
+on:
+  workflow_dispatch:
+    inputs:
+      aire:
+        description: "Aire urbaine à préparer (ex. Lyon)"
+        required: true
+        default: Lyon
+      zoom:
+        description: "Zoom des tuiles de données"
+        required: false
+        default: '12'
+      simplification:
+        description: "Simplification des contours, en mètres"
+        required: false
+        default: '8'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  preparer:
+    name: Zones climatiques locales
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - run: pip install -r pipeline/requirements.txt
+
+      - name: Lancer le pipeline
+        run: |
+          python -m pipeline.lcz \
+            --aire "${{ inputs.aire }}" \
+            --zoom "${{ inputs.zoom }}" \
+            --simplification "${{ inputs.simplification }}" \
+            | tee pipeline-lcz.log
+
+      - name: Vérifier le poids des données versionnées
+        run: |
+          poids=$(du -sm public/data | cut -f1)
+          echo "public/data pèse ${poids} Mo."
+          if [ "$poids" -gt 50 ]; then
+            echo "Au-delà de 50 Mo, les données ne doivent plus être versionnées :"
+            echo "il faut passer à une Release GitHub (étape 2)."
+            exit 1
+          fi
+
+      - name: Garder le rapport et le journal
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: rapport-lcz
+          path: |
+            pipeline/rapports/lcz.md
+            pipeline-lcz.log
+          if-no-files-found: warn
+
+      - name: Ouvrir la pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          rm -f pipeline-lcz.log
+          aire=$(echo '${{ inputs.aire }}' | tr '[:upper:] ' '[:lower:]-')
+          branche="donnees/lcz-${aire}-${{ github.run_number }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branche"
+          git add public/data pipeline/rapports
+          if git diff --cached --quiet; then
+            echo "Aucun changement : rien à proposer."
+            exit 0
+          fi
+          git commit -m "Prépare les données de ${{ inputs.aire }}"
+          git push -u origin "$branche"
+          corps=$(cat pipeline/rapports/lcz.md)
+          gh pr create \
+            --title "Données : ${{ inputs.aire }}" \
+            --body "$corps" \
+            --base "${{ github.ref_name }}" \
+            --head "$branche"
