@@ -162,6 +162,37 @@ Ce réglage n'est donc plus cosmétique : **tant que la branche par défaut n'es
 pas `main`, chaque fusion demandera cette manœuvre.** Une fois le réglage fait,
 retirer la branche de travail des déclencheurs de `deploy.yml`.
 
+### Le vrai comportement de la publication, après plusieurs erreurs de ma part
+
+Constat établi par l'observation, pas par déduction :
+
+| Branche de départ | Publication |
+| --- | --- |
+| `claude/validation-automatique-etapes-870mpp` | **réussit** |
+| `main` | **échoue** en deux secondes, sans journal |
+
+La branche par défaut du dépôt est `lancer/donnees-lyon` — une de mes branches
+jetables. Ce n'est donc **pas** la règle « seule la branche par défaut publie »
+que j'avais avancée : la branche qui publie n'est pas la branche par défaut.
+L'environnement `github-pages` a retenu une liste de branches autorisées au
+moment de sa création, et `main` n'y est pas.
+
+Deux erreurs commises en chemin, à ne pas refaire :
+
+1. J'ai posé sur le job de publication une condition appuyée sur
+   `github.event.repository.default_branch`, qui arrive **vide** dans ce
+   contexte. Résultat : plus aucune publication ne partait, sans aucun rouge.
+   Une condition muette est pire qu'un échec visible.
+2. J'ai annoncé une pull request ouverte alors que l'étape avait échoué : je
+   l'avais rendue non bloquante, et j'ai lu « réussi » sans lire le journal.
+
+Règle retenue : **on tente toujours la publication, c'est GitHub qui tranche.**
+L'atelier affiche en clair la branche par défaut vue par GitHub, pour qu'une
+surprise de ce genre se voie.
+
+État à régler par elle, dans Settings du dépôt : branche par défaut à `main`.
+Le dépôt est passé en public (fait), donc les minutes d'Actions sont gratuites.
+
 ### Prochaine étape
 
 1. **Elle** : vérifier sur téléphone qu'une adresse lyonnaise donne bien un
