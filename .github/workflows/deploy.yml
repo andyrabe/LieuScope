@@ -25,8 +25,31 @@ jobs:
   construire:
     name: Construire le site
     runs-on: ubuntu-latest
+    outputs:
+      publier: ${{ steps.branche.outputs.publier }}
+      defaut: ${{ steps.branche.outputs.defaut }}
     steps:
       - uses: actions/checkout@v7
+
+      # On demande la branche par défaut à GitHub plutôt que de la lire dans le
+      # contexte de l'évènement : elle y arrive vide selon la façon dont la
+      # poussée est faite, et une condition muette sautait alors toute
+      # publication sans rien signaler.
+      - name: Regarder quelle branche a le droit de publier
+        id: branche
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          defaut=$(gh api "repos/${{ github.repository }}" --jq .default_branch)
+          echo "defaut=${defaut}" >> "$GITHUB_OUTPUT"
+          if [ "${{ github.ref_name }}" = "$defaut" ]; then
+            echo "publier=true" >> "$GITHUB_OUTPUT"
+            echo "Branche par défaut ($defaut) : le site sera publié."
+          else
+            echo "publier=false" >> "$GITHUB_OUTPUT"
+            echo "Branche ${{ github.ref_name }} : construction seulement."
+          fi
+
       - uses: actions/setup-node@v7
         with:
           node-version: '22'
@@ -44,10 +67,10 @@ jobs:
         run: npm run poids
 
       - name: Prévenir si la publication va être sautée
-        if: github.ref_name != github.event.repository.default_branch
+        if: steps.branche.outputs.publier != 'true'
         run: |
-          echo "::warning::GitHub Pages n'accepte de publier que depuis la branche"
-          echo "::warning::par défaut du dépôt (${{ github.event.repository.default_branch }})."
+          echo "::warning::GitHub Pages n'accepte de publier que depuis la branche par"
+          echo "::warning::défaut du dépôt (${{ steps.branche.outputs.defaut }})."
           echo "::warning::Le site a bien été construit, mais il ne sera pas publié depuis"
           echo "::warning::${{ github.ref_name }}. Réglage : Settings du dépôt, « Default branch »."
       - uses: actions/upload-pages-artifact@v5
@@ -60,7 +83,7 @@ jobs:
     # L'environnement « github-pages » refuse toute publication qui ne vient pas
     # de la branche par défaut. Tenter quand même donnerait un échec rouge à
     # chaque poussée, sans rien dire de l'état réel du site.
-    if: github.ref_name == github.event.repository.default_branch
+    if: needs.construire.outputs.publier == 'true' 
     runs-on: ubuntu-latest
     environment:
       name: github-pages
