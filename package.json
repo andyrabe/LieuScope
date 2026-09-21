@@ -1,0 +1,27 @@
+{
+  "name": "lieuscope",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.12.0" },
+  "scripts": {
+    "predev": "node scripts/prepare-carte.mjs",
+    "dev": "astro dev",
+    "prebuild": "node scripts/prepare-carte.mjs",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check && tsc --noEmit",
+    "test": "vitest run",
+    "poids": "node scripts/poids.mjs"
+  },
+  "dependencies": {
+    "astro": "7.3.3",
+    "@astrojs/sitemap": "3.7.4",
+    "maplibre-gl": "6.10.0"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "typescript": "6.0.3",
+    "vitest": "5.0.1"
+  }
+}

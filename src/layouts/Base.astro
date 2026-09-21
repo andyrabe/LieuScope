@@ -1,0 +1,54 @@
+---
+import '../styles/global.css';
+
+interface Props {
+  titre: string;
+  description: string;
+  /** Chemin canonique, relatif au site, ex. « /methode ». */
+  chemin?: string;
+}
+
+const { titre, description, chemin = '' } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const canonique = new URL(`${base}${chemin}`, Astro.site ?? 'https://example.org');
+const annee = new Date().getFullYear();
+---
+
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{titre}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonique.href} />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="LieuScope" />
+    <meta property="og:title" content={titre} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonique.href} />
+    <meta property="og:locale" content="fr_FR" />
+    <meta name="twitter:card" content="summary" />
+  </head>
+  <body>
+    <header class="entete">
+      <a href={`${base}/`}><span class="marque">LieuScope</span></a>
+      <span class="baseline">ce que disent les données publiques sur un lieu</span>
+    </header>
+    <main class="enveloppe">
+      <slot />
+    </main>
+    <footer class="enveloppe pied">
+      <ul>
+        <li><a href={`${base}/methode`}>Méthode</a></li>
+        <li><a href={`${base}/sources`}>Sources et mentions légales</a></li>
+        <li><a href={`${base}/communes`}>Communes couvertes</a></li>
+      </ul>
+      <p>
+        LieuScope, {annee}. Site d'information gratuit, sans publicité, sans cookie
+        et sans mesure d'audience. Les données affichées proviennent de bases
+        publiques citées à côté de chaque résultat.
+      </p>
+    </footer>
+  </body>
+</html>

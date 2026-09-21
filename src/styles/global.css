@@ -1,0 +1,159 @@
+:root {
+  --fond: #fbfaf8;
+  --fond-carte: #ffffff;
+  --encre: #16181d;
+  --encre-douce: #4a4f5a;
+  --trait: #d9d6d0;
+  --accent: #1b4d7a;
+  --accent-clair: #e8eff6;
+  --focus: #b8460e;
+  --rayon: 10px;
+  --mesure: 34rem;
+  color-scheme: light;
+}
+
+* { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--encre);
+  font: 400 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+.enveloppe {
+  max-width: var(--mesure);
+  margin: 0 auto;
+  padding: 1rem 1rem 3rem;
+}
+
+a { color: var(--accent); }
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[tabindex]:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.entete {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  padding: 0.9rem 1rem 0;
+  max-width: var(--mesure);
+  margin: 0 auto;
+}
+.entete a { text-decoration: none; color: inherit; }
+.marque { font-size: 1.15rem; font-weight: 700; letter-spacing: -0.01em; }
+.baseline { font-size: 0.85rem; color: var(--encre-douce); }
+
+h1 { font-size: 1.5rem; line-height: 1.25; margin: 1.2rem 0 0.4rem; }
+h2 { font-size: 1.15rem; margin: 1.6rem 0 0.4rem; }
+h3 { font-size: 1rem; margin: 1.2rem 0 0.3rem; }
+p { margin: 0.5rem 0; }
+
+.intro { color: var(--encre-douce); margin-bottom: 1.2rem; }
+
+/* Champ d'adresse ------------------------------------------------------- */
+.recherche { position: relative; margin: 0 0 1rem; }
+.recherche label { display: block; font-weight: 600; margin-bottom: 0.35rem; }
+.recherche input {
+  width: 100%;
+  padding: 0.85rem 0.9rem;
+  font-size: 1.05rem;
+  border: 2px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--fond-carte);
+  color: inherit;
+}
+.aide { font-size: 0.85rem; color: var(--encre-douce); margin-top: 0.35rem; }
+
+.suggestions {
+  list-style: none;
+  margin: 0.35rem 0 0;
+  padding: 0;
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--fond-carte);
+  overflow: hidden;
+}
+.suggestions:empty { display: none; border: 0; }
+.suggestions li {
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid var(--trait);
+  cursor: pointer;
+}
+.suggestions li:last-child { border-bottom: 0; }
+.suggestions li[aria-selected='true'] { background: var(--accent-clair); }
+
+/* Verdict ---------------------------------------------------------------- */
+.verdict {
+  border: 1px solid var(--trait);
+  border-left: 6px solid var(--niveau, var(--trait));
+  border-radius: var(--rayon);
+  background: var(--fond-carte);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+.verdict[hidden] { display: none; }
+.adresse { font-size: 0.9rem; color: var(--encre-douce); margin: 0 0 0.3rem; }
+.phrase { font-size: 1.3rem; font-weight: 700; margin: 0.2rem 0 0.5rem; }
+.jauge { font-size: 0.95rem; font-weight: 600; color: var(--encre); }
+.jauge .pastilles { letter-spacing: 0.15em; }
+.classe { font-size: 0.95rem; margin: 0.5rem 0; }
+.bloc { margin-top: 0.9rem; }
+.bloc h3 { margin: 0 0 0.15rem; font-size: 0.95rem; }
+.bloc p { margin: 0; color: var(--encre-douce); }
+.source { font-size: 0.85rem; color: var(--encre-douce); margin-top: 0.9rem; }
+
+.message {
+  border: 1px solid var(--trait);
+  border-radius: var(--rayon);
+  background: var(--fond-carte);
+  padding: 0.9rem 1rem;
+  margin: 1rem 0;
+}
+.message[hidden] { display: none; }
+
+/* Carte ------------------------------------------------------------------ */
+.carte-zone { margin: 1.2rem 0; }
+.carte-zone[hidden] { display: none; }
+#carte { height: 320px; border-radius: var(--rayon); border: 1px solid var(--trait); }
+.legende { list-style: none; padding: 0; margin: 0.6rem 0 0; font-size: 0.9rem; }
+.legende li { display: flex; align-items: center; gap: 0.5rem; padding: 0.1rem 0; }
+.pastille {
+  width: 0.9rem; height: 0.9rem; border-radius: 3px;
+  border: 1px solid rgba(0, 0, 0, 0.25); flex: none;
+}
+
+.pied {
+  border-top: 1px solid var(--trait);
+  margin-top: 2rem;
+  padding-top: 1rem;
+  font-size: 0.9rem;
+  color: var(--encre-douce);
+}
+.pied ul { list-style: none; padding: 0; display: flex; gap: 1rem; flex-wrap: wrap; }
+
+.liste-communes { columns: 2 9rem; font-size: 0.95rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #14161a;
+    --fond-carte: #1c1f25;
+    --encre: #f2f1ee;
+    --encre-douce: #b7bcc6;
+    --trait: #363b45;
+    --accent: #8fc0ec;
+    --accent-clair: #24303d;
+    --focus: #ffab6b;
+    color-scheme: dark;
+  }
+}
