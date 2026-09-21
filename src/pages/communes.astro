@@ -1,0 +1,39 @@
+---
+import Base from '../layouts/Base.astro';
+import { couverture } from '../lib/communes';
+
+const { aire, communes } = couverture();
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+const triees = [...communes].sort((a, b) => a.nom.localeCompare(b.nom, 'fr'));
+---
+
+<Base
+  titre="Communes couvertes — LieuScope"
+  description="La liste des communes pour lesquelles LieuScope dispose des zones climatiques locales."
+  chemin="/communes"
+>
+  <h1>Communes couvertes</h1>
+  {
+    triees.length === 0 ? (
+      <p>
+        Les données ne sont pas encore publiées sur ce site. Dès la première
+        mise en ligne, la liste des communes couvertes apparaîtra ici.
+      </p>
+    ) : (
+      <>
+        <p class="intro">
+          LieuScope couvre aujourd'hui {triees.length} communes de l'aire de {aire}.
+          Choisissez la vôtre, ou saisissez directement votre adresse sur la
+          <a href={`${base}/`}>page d'accueil</a>.
+        </p>
+        <ul class="liste-communes">
+          {triees.map((commune) => (
+            <li>
+              <a href={`${base}/commune/${commune.slug}`}>{commune.nom}</a>
+            </li>
+          ))}
+        </ul>
+      </>
+    )
+  }
+</Base>

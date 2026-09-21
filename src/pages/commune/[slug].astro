@@ -1,0 +1,74 @@
+---
+import Base from '../../layouts/Base.astro';
+import { couverture, type Commune } from '../../lib/communes';
+import { ECHELLE, LIBELLE_NIVEAU, COULEUR_NIVEAU } from '../../lib/verdict/lcz';
+
+export function getStaticPaths() {
+  const { communes, aire, millesime } = couverture();
+  return communes.map((commune) => ({
+    params: { slug: commune.slug },
+    props: { commune, aire, millesime },
+  }));
+}
+
+interface Props {
+  commune: Commune;
+  aire: string;
+  millesime: string;
+}
+
+const { commune, aire, millesime } = Astro.props;
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+const repartition = [...ECHELLE]
+  .reverse()
+  .map((niveau) => ({ niveau, part: commune.parts[niveau] ?? 0 }))
+  .filter((ligne) => ligne.part > 0);
+
+const dominante = LIBELLE_NIVEAU[commune.dominante];
+const partDominante = commune.parts[commune.dominante] ?? 0;
+
+const phrase = `À ${commune.nom}, la sensibilité à la surchauffe la plus répandue est ${dominante} : elle concerne ${partDominante} % de la surface bâtie et non bâtie de la commune.`;
+---
+
+<Base
+  titre={`Chaleur à ${commune.nom} — LieuScope`}
+  description={`Sensibilité à la surchauffe à ${commune.nom} : ce que disent les zones climatiques locales du Cerema, rue par rue.`}
+  chemin={`/commune/${commune.slug}`}
+>
+  <h1>La chaleur à {commune.nom}</h1>
+  <p class="intro">{phrase}</p>
+
+  <h2>Répartition de la commune</h2>
+  <ul class="legende">
+    {
+      repartition.map((ligne) => (
+        <li>
+          <span class="pastille" style={`background:${COULEUR_NIVEAU[ligne.niveau]}`} aria-hidden="true"></span>
+          <span>
+            Sensibilité {LIBELLE_NIVEAU[ligne.niveau]} : {ligne.part} % de la commune
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+
+  <h2>Votre adresse à {commune.nom}</h2>
+  <p>
+    Le chiffre ci-dessus vaut pour la commune entière. D'une rue à l'autre,
+    l'écart est souvent plus grand qu'entre deux communes : un centre ancien
+    serré et un lotissement avec jardins ne se ressemblent pas.
+  </p>
+  <p>
+    <a href={`${base}/?commune=${commune.slug}`}>Saisir une adresse à {commune.nom}</a>
+  </p>
+
+  <h2>D'où vient ce résultat</h2>
+  <p>
+    Les zones climatiques locales décrivent la forme des îlots : hauteur et
+    densité du bâti, part de végétation, d'eau ou de sol nu. Ce n'est pas une
+    température mesurée, ni un avis sur un logement. Le classement complet est
+    expliqué sur la page <a href={`${base}/methode`}>Méthode</a>.
+  </p>
+  <p class="source">Source : Cerema, {millesime} — aire de {aire}.</p>
+</Base>

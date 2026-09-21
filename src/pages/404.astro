@@ -1,0 +1,10 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Base titre="Page introuvable — LieuScope" description="Cette page n'existe pas sur LieuScope.">
+  <h1>Cette page n'existe pas</h1>
+  <p>Le lien est peut-être ancien, ou mal recopié.</p>
+  <p><a href={`${base}/`}>Revenir à la recherche d'adresse</a></p>
+</Base>

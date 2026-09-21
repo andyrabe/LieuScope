@@ -1,0 +1,77 @@
+---
+import Base from '../layouts/Base.astro';
+const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+---
+
+<Base
+  titre="Sources et mentions légales — LieuScope"
+  description="Les jeux de données utilisés par LieuScope, leurs producteurs et leurs licences, et les mentions légales du site."
+  chemin="/sources"
+>
+  <h1>Sources et mentions légales</h1>
+
+  <h2>Les données affichées</h2>
+  <h3>Zones climatiques locales</h3>
+  <ul>
+    <li>Producteur : Cerema.</li>
+    <li>
+      Jeu :
+      <a href="https://www.data.gouv.fr/fr/datasets/6641c562e5acdb35c0e6051d/" rel="noreferrer">
+        zones climatiques locales des aires urbaines françaises
+      </a>.
+    </li>
+    <li>Licence : Licence Ouverte (Etalab).</li>
+    <li>Millésime et date de téléchargement : <span id="millesime">indiqués à côté de chaque résultat</span>.</li>
+    <li>
+      Ce que la donnée décrit : la forme d'un îlot urbain. Ce qu'elle ne décrit
+      pas : une température mesurée, ni la qualité d'un logement. Le détail est
+      sur la page <a href={`${base}/methode`}>Méthode</a>.
+    </li>
+  </ul>
+
+  <h3>Adresses</h3>
+  <p>
+    La recherche d'adresse utilise le service de géocodage de la Géoplateforme
+    de l'IGN, sans clé d'accès. Le texte que vous saisissez part vers ce seul
+    service, le temps de la recherche.
+  </p>
+
+  <h3>Fond de carte</h3>
+  <p>
+    Tuiles vectorielles Plan IGN de la Géoplateforme. L'attribution est affichée
+    en permanence sur la carte.
+  </p>
+
+  <h2>Vie privée</h2>
+  <ul>
+    <li>Aucun compte, aucun formulaire, aucune donnée personnelle conservée.</li>
+    <li>Aucun cookie, aucun traceur, aucun outil de mesure d'audience.</li>
+    <li>L'adresse saisie n'est enregistrée nulle part, ni sur le site ni ailleurs.</li>
+    <li>Le calcul du verdict se fait entièrement dans votre navigateur.</li>
+  </ul>
+
+  <h2>Le site</h2>
+  <ul>
+    <li>LieuScope est un site d'information gratuit, sans publicité et sans lien sponsorisé.</li>
+    <li>Hébergement : GitHub Pages (GitHub, Inc.).</li>
+    <li>Code source sous licence MIT.</li>
+  </ul>
+
+  <h2>Signaler une erreur</h2>
+  <p>
+    Si un résultat vous paraît faux à une adresse que vous connaissez bien,
+    c'est utile à savoir : cela sert directement à corriger la méthode.
+  </p>
+
+  <script>
+    const base = import.meta.env.BASE_URL.replace(/\/$/, '');
+    fetch(`${base}/data/lcz/meta.json`)
+      .then((reponse) => (reponse.ok ? reponse.json() : null))
+      .then((meta) => {
+        const cible = document.getElementById('millesime');
+        if (meta === null || cible === null) return;
+        cible.textContent = `${meta.millesime}, téléchargé le ${meta.telecharge}`;
+      })
+      .catch(() => undefined);
+  </script>
+</Base>
