@@ -17,6 +17,7 @@ Aire traitée : **Lyon**. Exécution du 2026-09-21.
 - Objets retenus : 63561
 - Classes illisibles écartées : 0 (0.0 %)
 - Colonne des classes : `lcz`
+- Colonnes présentes dans le fichier du producteur : `identifier`, `hre`, `are`, `bur`, `ror`, `bsr`, `war`, `ver`, `vhr`, `lcz`, `lcz_int`, `geometry`
 - Emprise (ouest, sud, est, nord) : 4.4294, 45.3964, 5.3833, 46.1136
 
 ## Sorties
@@ -24,7 +25,7 @@ Aire traitée : **Lyon**. Exécution du 2026-09-21.
 - Tuiles écrites : 1416 (zoom 14)
 - Poids total : 23.5 Mo
 - Tuile la plus lourde : `14/8412/5844.json`, 100 Ko (budget 300 Ko)
-- Communes décrites : 0
+- Communes décrites : 381 (3 écartées, non situées)
 
 ## Adresses témoins
 
