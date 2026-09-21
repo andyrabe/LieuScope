@@ -77,10 +77,26 @@ lecture remplacera le tableau ci-dessus, et sera notée dans `docs/JOURNAL.md`.
 
 ## Comment les données sont préparées
 
-Le pipeline `pipeline/lcz/` télécharge le jeu du Cerema, ne garde que l'aire
-urbaine pilote, simplifie les géométries, arrondit les coordonnées à cinq
-décimales (environ un mètre), et découpe le résultat en petits fichiers par
-tuile, au zoom 12. Un polygone à cheval sur deux tuiles est copié dans chacune.
+Le pipeline `pipeline/lcz/` télécharge le fichier de l'aire urbaine pilote
+publié par le Cerema, puis :
+
+1. **fusionne les zones voisines de même classe.** Le jeu est dérivé d'une image
+   satellite : une même classe y est découpée en milliers de petites zones
+   accolées. Les fusionner efface leurs frontières communes, qui ne portaient
+   aucune information ;
+2. **simplifie les contours** avec une tolérance de 40 mètres. La zone décrit un
+   îlot de quelques centaines de mètres : ce niveau de détail suffit, et il évite
+   de faire télécharger des contours en escalier hérités de la grille de
+   l'image ;
+3. **arrondit les coordonnées à cinq décimales**, soit environ un mètre ;
+4. **découpe le résultat en petits fichiers par tuile, au zoom 14.** Une zone à
+   cheval sur deux tuiles est présente dans chacune, mais seulement pour la part
+   qui y tombe : la découper au bord évite de recopier une grande zone en entier
+   dans chaque tuile, sans changer le résultat du test « point dans polygone ».
+
+Ces choix visent un budget précis : chaque fichier téléchargé par le navigateur
+doit peser moins de 300 Ko.
+
 Chaque exécution écrit un rapport dans `pipeline/rapports/lcz.md` : nombre de
 zones, valeurs manquantes, emprise, poids des fichiers, et verdict obtenu pour
 chaque adresse témoin. Un écart sur un témoin bloque la mise en ligne.

@@ -76,15 +76,26 @@ def main() -> int:
 
     metres = zones.to_crs(LAMBERT93)
     surfaces = metres.geometry.area
-    metres["geometry"] = metres.geometry.simplify(
+
+    # Les communes se calculent sur les zones d'origine : la fusion ci-dessous
+    # efface le rattachement communal.
+    communes = repartition_par_commune(
+        zones.to_crs("EPSG:4326"), surfaces, insee, nom_commune
+    )
+    etape(f"{len(communes)} communes décrites", debut)
+
+    # Le jeu vient d'une image satellite : des milliers de petites zones
+    # voisines portent la même classe et se touchent. Les fusionner d'abord
+    # supprime toutes leurs frontières communes, ce qui allège énormément la
+    # sortie ; on simplifie ensuite les contours qui restent.
+    fusion = metres.dissolve(by="code_lcz", as_index=False).explode(ignore_index=True)
+    etape(f"{len(fusion)} zones après fusion des voisines de même classe", debut)
+    fusion["geometry"] = fusion.geometry.simplify(
         arguments.simplification, preserve_topology=True
     )
-    zones = metres.to_crs("EPSG:4326")
+    zones = fusion.to_crs("EPSG:4326")
     zones = zones[~zones.geometry.is_empty & zones.geometry.notna()].copy()
     etape("Simplification et reprojection terminées", debut)
-
-    communes = repartition_par_commune(zones, surfaces, insee, nom_commune)
-    etape(f"{len(communes)} communes décrites", debut)
 
     if dossier.exists():
         shutil.rmtree(dossier)
@@ -96,8 +107,8 @@ def main() -> int:
     etape(f"{len(par_tuile)} tuiles préparées", debut)
     poids = ecris_les_tuiles(par_tuile, dossier)
     etape(
-        f"{len(poids)} tuiles écrites, la plus lourde fait "
-        f"{max(poids.values(), default=0) / 1024:.0f} Ko",
+        f"{len(poids)} tuiles écrites, {sum(poids.values()) / 1024 / 1024:.1f} Mo au "
+        f"total, la plus lourde fait {max(poids.values(), default=0) / 1024:.0f} Ko",
         debut,
     )
 
@@ -206,7 +217,7 @@ def lis_les_arguments() -> argparse.Namespace:
     analyseur.add_argument(
         "--simplification",
         type=float,
-        default=8.0,
+        default=40.0,
         help="Tolérance de simplification des contours, en mètres.",
     )
     analyseur.add_argument("--sortie", default=str(SORTIE), help="Dossier de sortie.")

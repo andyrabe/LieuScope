@@ -6,7 +6,7 @@ import math
 from dataclasses import dataclass
 
 #: Zoom fixe de la couche des zones climatiques locales.
-ZOOM_LCZ = 12
+ZOOM_LCZ = 14
 
 
 @dataclass(frozen=True)

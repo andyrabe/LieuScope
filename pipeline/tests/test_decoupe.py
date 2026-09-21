@@ -4,7 +4,8 @@ from __future__ import annotations
 
 import json
 
-from shapely.geometry import box
+import pytest
+from shapely.geometry import box, shape
 
 from pipeline.common.tuiles import ZOOM_LCZ, emprise_tuile, tuile_du_point
 from pipeline.lcz.decoupe import arrondis, ecris_les_tuiles, range_par_tuile
@@ -31,14 +32,30 @@ def test_une_zone_tient_dans_sa_tuile():
     assert list(par_tuile) == [tuile]
 
 
-def test_une_zone_a_cheval_est_copiee_dans_chaque_tuile():
+def test_une_zone_a_cheval_est_decoupee_dans_chaque_tuile():
     tuile = tuile_du_point(*BELLECOUR, ZOOM_LCZ)
     ouest, sud, est, nord = emprise_tuile(tuile)
     largeur = est - ouest
-    a_cheval = box(est - largeur * 0.1, sud + 0.001, est + largeur * 0.1, nord - 0.001)
+    hauteur = nord - sud
+    a_cheval = box(
+        est - largeur * 0.1, sud + hauteur * 0.1, est + largeur * 0.1, nord - hauteur * 0.1
+    )
     par_tuile = range_par_tuile([(a_cheval, 5)], ZOOM_LCZ)
     assert len(par_tuile) == 2
     assert all(len(features) == 1 for features in par_tuile.values())
+    # Chaque morceau reste dans sa tuile, et les deux recollés font le tout.
+    # L'arrondi à 5 décimales a lieu après la découpe : un morceau peut
+    # dépasser du bord d'environ un mètre, ce qui ne change aucun verdict.
+    ARRONDI = 2e-5
+    total = 0.0
+    for t, features in par_tuile.items():
+        cadre = box(*emprise_tuile(t))
+        morceau = shape(features[0]["geometry"])
+        assert morceau.difference(cadre.buffer(ARRONDI)).is_empty
+        total += morceau.area
+    # Même tolérance côté surface : arrondir les sommets d'une zone de cette
+    # taille à cinq décimales en déplace le contour de quelques pour mille.
+    assert total == pytest.approx(a_cheval.area, rel=5e-3)
 
 
 def test_ecriture_puis_relecture_au_point(tmp_path):

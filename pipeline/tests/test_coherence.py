@@ -9,10 +9,12 @@ from __future__ import annotations
 import re
 from pathlib import Path
 
+from pipeline.common.tuiles import ZOOM_LCZ
 from pipeline.common.verdict import CLASSES, ECHELLE
 
 RACINE = Path(__file__).resolve().parents[2]
 SOURCE_TS = RACINE / "src" / "lib" / "verdict" / "lcz.ts"
+TUILES_TS = RACINE / "src" / "lib" / "verdict" / "tiles.ts"
 
 LIGNE = re.compile(
     r"\{\s*code:\s*(\d+),\s*officiel:\s*'([^']+)',\s*libelle:\s*'([^']*)',\s*niveau:\s*'([^']+)'\s*\}"
@@ -42,3 +44,11 @@ def test_la_meme_echelle_des_deux_cotes():
     assert bloc is not None
     cote_site = tuple(re.findall(r"'([a-z_]+)'", bloc.group(1)))
     assert cote_site == ECHELLE
+
+
+def test_le_meme_zoom_des_deux_cotes():
+    """Un zoom différent ici et là-bas ferait chercher la donnée au mauvais endroit."""
+    texte = TUILES_TS.read_text(encoding="utf-8")
+    trouve = re.search(r"export const ZOOM_LCZ = (\d+);", texte)
+    assert trouve is not None
+    assert int(trouve.group(1)) == ZOOM_LCZ

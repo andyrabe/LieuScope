@@ -27,32 +27,45 @@ def arrondis(valeur):
     return valeur
 
 
-def range_par_tuile(zones, zoom: int) -> dict[Tuile, list[dict]]:
-    """Range chaque zone dans toutes les tuiles qu'elle touche.
+#: Types de géométrie qu'une découpe peut produire et qu'on sait servir.
+SURFACIQUES = {"Polygon", "MultiPolygon"}
 
-    Une zone à cheval est recopiée entière dans chaque tuile : c'est le prix à
-    payer pour que le navigateur n'ait qu'un seul petit fichier à lire.
+
+def range_par_tuile(zones, zoom: int) -> dict[Tuile, list[dict]]:
+    """Range chaque zone dans les tuiles qu'elle touche, découpée à leur bord.
+
+    Une zone à cheval est présente dans chaque tuile qu'elle touche, mais
+    seulement pour la part qui y tombe. Recopier la zone entière dans chaque
+    tuile ferait exploser le poids dès qu'une zone est grande, sans rien
+    changer au résultat : le test « point dans polygone » donne la même réponse.
     """
     par_tuile: dict[Tuile, list[dict]] = defaultdict(list)
     emprises: dict[Tuile, object] = {}
     for geometrie, code in zones:
         ouest, sud, est, nord = geometrie.bounds
         candidates = tuiles_de_l_emprise(ouest, sud, est, nord, zoom)
-        # La conversion en GeoJSON et l'arrondi coûtent cher : on ne les fait
-        # qu'une fois par zone, même quand elle tombe dans plusieurs tuiles.
-        forme: dict | None = None
         for tuile in candidates:
-            if len(candidates) > 1:
+            if len(candidates) == 1:
+                # La zone tient dans une seule tuile : rien à découper.
+                part = geometrie
+            else:
                 cadre = emprises.get(tuile)
                 if cadre is None:
                     cadre = box(*emprise_tuile(tuile))
                     emprises[tuile] = cadre
                 if not geometrie.intersects(cadre):
                     continue
-            if forme is None:
-                forme = arrondis(mapping(geometrie))
+                part = geometrie.intersection(cadre)
+            if part.is_empty or part.geom_type not in SURFACIQUES:
+                # Un simple contact au bord donne un point ou une ligne :
+                # rien à afficher, rien à tester.
+                continue
             par_tuile[tuile].append(
-                {"type": "Feature", "properties": {"c": int(code)}, "geometry": forme}
+                {
+                    "type": "Feature",
+                    "properties": {"c": int(code)},
+                    "geometry": arrondis(mapping(part)),
+                }
             )
     return dict(par_tuile)
 

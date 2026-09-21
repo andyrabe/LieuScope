@@ -4,7 +4,7 @@ import type { Point, Tile } from './types.js';
  * Zoom fixe de la couche « zones climatiques locales ».
  * Choisi pour que chaque fichier de tuile reste bien sous 300 Ko.
  */
-export const ZOOM_LCZ = 12;
+export const ZOOM_LCZ = 14;
 
 /** Nombre de tuiles par côté à un zoom donné. */
 export function tileCount(z: number): number {

@@ -81,6 +81,32 @@ en haut.
   l'API ne m'autorise pas à déclencher un atelier à la main. L'aire traitée est
   alors celle de `data/aire-pilote.txt`.
 
+### Première exécution réelle du pipeline, et ce qu'elle a appris
+
+Le pipeline a tourné dans Actions en 5 min 26 s et a bien trouvé le bon fichier
+(`lcz-spot-2022-lyon.zip`, millésime 2022), la bonne colonne de classes (`lcz`)
+et 81 048 zones. Mais les sorties étaient très au-dessus du budget :
+**110 tuiles, la plus lourde à 6,9 Mo** (budget : 300 Ko) et **656 Mo au total**
+(limite pour des données versionnées : 50 Mo). Le garde-fou de `data.yml` a
+arrêté la suite, donc rien n'a été proposé à la fusion.
+
+Cause : le jeu est dérivé d'une image satellite. Une même classe y est découpée
+en milliers de petites zones accolées, aux contours en escalier. Trois
+corrections, dans cet ordre :
+
+1. **Fusion des zones voisines de même classe** avant tout le reste : leurs
+   frontières communes disparaissent.
+2. **Simplification portée de 8 à 40 mètres.** À l'échelle d'un îlot, ce détail
+   ne dit rien de plus.
+3. **Découpe des zones au bord de la tuile** au lieu de les recopier entières,
+   et **zoom des tuiles porté de 12 à 14**. Sans la découpe, la fusion aurait eu
+   l'effet inverse : une grande zone fusionnée aurait été recopiée entière dans
+   chacune des dizaines de tuiles qu'elle touche.
+
+Le zoom doit être identique côté site et côté pipeline ; un test le vérifie
+désormais (`test_le_meme_zoom_des_deux_cotes`), comme il vérifiait déjà que les
+dix-sept classes sont décrites pareil des deux côtés.
+
 ### Prochaine étape
 
 1. Fusionner la pull request, activer Pages, vérifier que le site s'ouvre.
