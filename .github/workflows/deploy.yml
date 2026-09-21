@@ -80,10 +80,9 @@ jobs:
   publier:
     name: Publier sur GitHub Pages
     needs: construire
-    # L'environnement « github-pages » refuse toute publication qui ne vient pas
-    # de la branche par défaut. Tenter quand même donnerait un échec rouge à
-    # chaque poussée, sans rien dire de l'état réel du site.
-    if: needs.construire.outputs.publier == 'true' 
+    # On tente toujours la publication : c'est GitHub qui tranche. Une
+    # condition posée ici s'est déjà trompée et a sauté toutes les
+    # publications en silence, ce qui est pire qu'un échec visible.
     runs-on: ubuntu-latest
     environment:
       name: github-pages
