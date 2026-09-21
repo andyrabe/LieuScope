@@ -30,9 +30,14 @@ python -m pipeline.lcz --aire "Lyon"   # préparer les données d'une aire urbai
 pytest pipeline                        # tests du pipeline
 ```
 
-Le pipeline tourne aussi dans GitHub Actions : onglet **Actions** →
-**Préparer les données** → **Run workflow**. Il ouvre une pull request avec les
-données produites et son rapport de contrôle.
+Le pipeline tourne aussi dans GitHub Actions, de deux façons :
+
+- onglet **Actions** → **Préparer les données** → **Run workflow** ;
+- ou en poussant une branche dont le nom commence par `lancer/donnees-`. L'aire
+  traitée est alors celle notée dans `data/aire-pilote.txt`.
+
+Dans les deux cas, l'atelier ouvre une pull request avec les données produites
+et son rapport de contrôle. Rien ne part en ligne sans cette pull request.
 
 ## Documents
 

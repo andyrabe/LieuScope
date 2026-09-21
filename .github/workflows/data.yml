@@ -1,11 +1,16 @@
 name: Préparer les données
 
-# À lancer à la main : onglet Actions, « Préparer les données », « Run workflow ».
+# Deux façons de le lancer :
+#   - onglet Actions, « Préparer les données », « Run workflow » ;
+#   - ou en poussant une branche dont le nom commence par « lancer/donnees- ».
+#     L'aire traitée est alors celle notée dans data/aire-pilote.txt.
 # Le traitement télécharge le jeu du Cerema, découpe les zones en petits
 # fichiers, écrit un rapport, puis ouvre une pull request avec le résultat.
 # Rien ne part en ligne sans cette pull request.
 
 on:
+  push:
+    branches: ['lancer/donnees-**']
   workflow_dispatch:
     inputs:
       aire:
@@ -33,6 +38,18 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      - name: Choisir l'aire à traiter
+        id: reglages
+        run: |
+          aire="${{ inputs.aire }}"
+          if [ -z "$aire" ]; then aire=$(tr -d '\r\n' < data/aire-pilote.txt); fi
+          zoom="${{ inputs.zoom }}"
+          simplification="${{ inputs.simplification }}"
+          echo "aire=${aire}" >> "$GITHUB_OUTPUT"
+          echo "zoom=${zoom:-12}" >> "$GITHUB_OUTPUT"
+          echo "simplification=${simplification:-8}" >> "$GITHUB_OUTPUT"
+          echo "Aire retenue : ${aire}"
+
       - uses: actions/setup-python@v7
         with:
           python-version: '3.12'
@@ -43,9 +60,9 @@ jobs:
       - name: Lancer le pipeline
         run: |
           python -m pipeline.lcz \
-            --aire "${{ inputs.aire }}" \
-            --zoom "${{ inputs.zoom }}" \
-            --simplification "${{ inputs.simplification }}" \
+            --aire "${{ steps.reglages.outputs.aire }}" \
+            --zoom "${{ steps.reglages.outputs.zoom }}" \
+            --simplification "${{ steps.reglages.outputs.simplification }}" \
             | tee pipeline-lcz.log
 
       - name: Vérifier le poids des données versionnées
@@ -73,7 +90,7 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           rm -f pipeline-lcz.log
-          aire=$(echo '${{ inputs.aire }}' | tr '[:upper:] ' '[:lower:]-')
+          aire=$(echo '${{ steps.reglages.outputs.aire }}' | tr '[:upper:] ' '[:lower:]-')
           branche="donnees/lcz-${aire}-${{ github.run_number }}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -83,11 +100,14 @@ jobs:
             echo "Aucun changement : rien à proposer."
             exit 0
           fi
-          git commit -m "Prépare les données de ${{ inputs.aire }}"
+          git commit -m "Prépare les données de ${{ steps.reglages.outputs.aire }}"
           git push -u origin "$branche"
           corps=$(cat pipeline/rapports/lcz.md)
-          gh pr create \
-            --title "Données : ${{ inputs.aire }}" \
+          if ! gh pr create \
+            --title "Données : ${{ steps.reglages.outputs.aire }}" \
             --body "$corps" \
-            --base "${{ github.ref_name }}" \
-            --head "$branche"
+            --base main \
+            --head "$branche"; then
+            echo "::warning::La pull request n'a pas pu être ouverte (réglage « Allow GitHub Actions to create pull requests »)."
+            echo "La branche $branche contient quand même les données."
+          fi

@@ -25,7 +25,11 @@ jobs:
         with:
           node-version: '22'
           cache: npm
+      # enablement: true permet à l'atelier d'activer GitHub Pages lui-même,
+      # sans passer par les réglages du dépôt.
       - uses: actions/configure-pages@v6
+        with:
+          enablement: true
       - run: npm ci
       - run: npm run check
       - run: npm test

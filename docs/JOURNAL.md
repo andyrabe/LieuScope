@@ -55,6 +55,14 @@ en haut.
   les consignes. Tant qu'il n'a pas tourné, `public/data/lcz/` est vide et le
   site affiche « les données ne sont pas encore publiées ».
 
+### Ajouté dans la foulée
+
+- `deploy.yml` active GitHub Pages lui-même (`enablement: true`) : plus besoin
+  d'aller le régler dans les Settings du dépôt.
+- `data.yml` se lance aussi en poussant une branche `lancer/donnees-…`, car
+  l'API ne m'autorise pas à déclencher un atelier à la main. L'aire traitée est
+  alors celle de `data/aire-pilote.txt`.
+
 ### Prochaine étape
 
 1. Fusionner la pull request, activer Pages, vérifier que le site s'ouvre.
