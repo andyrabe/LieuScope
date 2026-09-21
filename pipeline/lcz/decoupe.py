@@ -34,17 +34,25 @@ def range_par_tuile(zones, zoom: int) -> dict[Tuile, list[dict]]:
     payer pour que le navigateur n'ait qu'un seul petit fichier à lire.
     """
     par_tuile: dict[Tuile, list[dict]] = defaultdict(list)
+    emprises: dict[Tuile, object] = {}
     for geometrie, code in zones:
         ouest, sud, est, nord = geometrie.bounds
-        for tuile in tuiles_de_l_emprise(ouest, sud, est, nord, zoom):
-            if not geometrie.intersects(box(*emprise_tuile(tuile))):
-                continue
+        candidates = tuiles_de_l_emprise(ouest, sud, est, nord, zoom)
+        # La conversion en GeoJSON et l'arrondi coûtent cher : on ne les fait
+        # qu'une fois par zone, même quand elle tombe dans plusieurs tuiles.
+        forme: dict | None = None
+        for tuile in candidates:
+            if len(candidates) > 1:
+                cadre = emprises.get(tuile)
+                if cadre is None:
+                    cadre = box(*emprise_tuile(tuile))
+                    emprises[tuile] = cadre
+                if not geometrie.intersects(cadre):
+                    continue
+            if forme is None:
+                forme = arrondis(mapping(geometrie))
             par_tuile[tuile].append(
-                {
-                    "type": "Feature",
-                    "properties": {"c": int(code)},
-                    "geometry": arrondis(mapping(geometrie)),
-                }
+                {"type": "Feature", "properties": {"c": int(code)}, "geometry": forme}
             )
     return dict(par_tuile)
 

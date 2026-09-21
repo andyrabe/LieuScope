@@ -11,6 +11,7 @@ from __future__ import annotations
 import argparse
 import json
 import shutil
+import time
 from datetime import date
 from pathlib import Path
 
@@ -35,25 +36,32 @@ SORTIE = RACINE / "public" / "data" / "lcz"
 LAMBERT93 = "EPSG:2154"
 
 
+def etape(titre: str, depuis: float) -> float:
+    """Affiche le temps passé : sans cela, une exécution longue est aveugle."""
+    maintenant = time.monotonic()
+    print(f"[{maintenant - depuis:6.1f} s] {titre}", flush=True)
+    return maintenant
+
+
 def main() -> int:
+    debut = time.monotonic()
     arguments = lis_les_arguments()
     dossier = Path(arguments.sortie)
 
     print(f"Jeu {JEU} sur data.gouv.fr…")
     jeu = lis_le_jeu(JEU)
     ressource = ressource_de_l_aire(jeu, arguments.aire)
-    print(f"Ressource retenue : {ressource.titre} ({ressource.format})")
+    print(f"Ressource retenue : {ressource.titre} ({ressource.format})", flush=True)
     fichier = telecharge(ressource)
-    print(f"Fichier local : {fichier.name}")
-
+    etape(f"Fichier local : {fichier.name}", debut)
     zones = geopandas.read_file(chemin_lisible(fichier))
     total_brut = len(zones)
-    print(f"{total_brut} objets lus.")
+    etape(f"{total_brut} objets lus", debut)
 
     classe = colonne_classe(zones)
     insee = colonne_insee(zones)
     nom_commune = colonne_commune(zones)
-    print(f"Colonne des classes : {classe}")
+    print(f"Colonne des classes : {classe}", flush=True)
 
     zones["code_lcz"] = zones[classe].map(code_interne)
     manquantes = int(zones["code_lcz"].isna().sum())
@@ -73,8 +81,10 @@ def main() -> int:
     )
     zones = metres.to_crs("EPSG:4326")
     zones = zones[~zones.geometry.is_empty & zones.geometry.notna()].copy()
+    etape("Simplification et reprojection terminées", debut)
 
     communes = repartition_par_commune(zones, surfaces, insee, nom_commune)
+    etape(f"{len(communes)} communes décrites", debut)
 
     if dossier.exists():
         shutil.rmtree(dossier)
@@ -83,8 +93,13 @@ def main() -> int:
     par_tuile = range_par_tuile(
         zip(zones.geometry, zones["code_lcz"], strict=True), arguments.zoom
     )
+    etape(f"{len(par_tuile)} tuiles préparées", debut)
     poids = ecris_les_tuiles(par_tuile, dossier)
-    print(f"{len(poids)} tuiles écrites, la plus lourde fait {max(poids.values(), default=0) / 1024:.0f} Ko.")
+    etape(
+        f"{len(poids)} tuiles écrites, la plus lourde fait "
+        f"{max(poids.values(), default=0) / 1024:.0f} Ko",
+        debut,
+    )
 
     meta = {
         "couche": "lcz",
@@ -152,13 +167,16 @@ def repartition_par_commune(zones, surfaces, insee: str | None, nom: str | None)
         }
         dominante = max(parts, key=lambda n: parts[n])
         libelle = str(groupe[nom].iloc[0]) if nom is not None else str(valeur)
-        centre = groupe.geometry.union_all().centroid
+        # Centre de l'emprise de la commune : fusionner toutes ses zones pour
+        # en prendre le centroïde exact coûterait des minutes pour un point qui
+        # ne sert qu'à centrer une carte.
+        ouest, sud, est, nord = groupe.total_bounds
         resultat.append(
             {
                 "insee": str(valeur) if insee is not None else "",
                 "nom": libelle,
                 "slug": slug(libelle),
-                "centre": [round(centre.x, 5), round(centre.y, 5)],
+                "centre": [round((ouest + est) / 2, 5), round((sud + nord) / 2, 5)],
                 "parts": parts,
                 "dominante": dominante,
             }
