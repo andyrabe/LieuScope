@@ -15,7 +15,7 @@ Mise à jour : 21 septembre 2026. Étape en cours : **étape 1**.
 - [x] JOURNAL, ROADMAP, MÉTHODE, SOURCES, `.gitignore`, LICENSE.
 - [x] Pages activé automatiquement par `deploy.yml` (`enablement: true`).
 - [x] Première mise en ligne réussie le 21 septembre 2026.
-- [ ] Terminé quand le site s'ouvre sur son téléphone.
+- [x] **Terminé** : le site s'ouvre sur son téléphone (confirmé le 21 septembre 2026).
 
 ## Étape 1 — la chaleur sur la ville pilote (en cours)
 
@@ -25,9 +25,9 @@ Mise à jour : 21 septembre 2026. Étape en cours : **étape 1**.
 - [x] Carte MapLibre chargée en différé, avec légende et attribution.
 - [x] Pages « Méthode », « Sources et mentions légales », « Communes couvertes ».
 - [x] Pipeline `pipeline/lcz/` : téléchargement, découpe en tuiles, rapport, témoins.
-- [ ] **Bloqué ici** : exécuter `data.yml` dans Actions pour produire `public/data/lcz/`
-      (data.gouv.fr est inaccessible depuis l'environnement de développement).
-- [ ] Confirmer le millésime du jeu Cerema et le noter dans `data/SOURCES.md`.
+- [x] Données de Lyon produites dans Actions et mises en ligne (PR #1, 21 septembre 2026).
+- [x] Millésime confirmé : **Cerema 2022** (`lcz-spot-2022-lyon.zip`).
+- [ ] Recopier le millésime et la date de téléchargement dans `data/SOURCES.md`.
 - [ ] Relire le guide utilisateur et le guide technique du Cerema, corriger le
       tableau de `docs/METHODE.md` si nécessaire.
 - [ ] Remplacer les trois adresses témoins par des adresses qu'elle connaît, et

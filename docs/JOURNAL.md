@@ -139,10 +139,36 @@ Autres constats de ce rapport :
   Ces attentes venaient de moi, pas du terrain : elles ne bloquent pas, et
   elles sont à revoir avec elle.
 
+### Troisième exécution : bon du premier coup, et mise en ligne réussie
+
+| | Obtenu | Budget |
+| --- | --- | --- |
+| Poids total | 23,5 Mo | 50 Mo |
+| Tuile la plus lourde | 100 Ko | 300 Ko |
+| Tuiles écrites | 1 416 (zoom 14) | — |
+| Classes illisibles | 0 | — |
+| Millésime affiché | 2022 | — |
+
+Pull request #1 ouverte à la main (les ateliers n'ont pas le droit d'en créer
+sur ce dépôt), fusionnée par elle le 21 septembre à 01:03.
+
+**La mise en ligne depuis `main` a alors échoué**, alors que la construction
+était verte : l'environnement `github-pages` refuse toute publication qui ne
+vient pas de la branche par défaut, et celle-ci est encore la branche de
+travail. Contournement appliqué : reporter le commit de fusion sur la branche
+par défaut, en avance rapide. Publication réussie à 02:10.
+
+Ce réglage n'est donc plus cosmétique : **tant que la branche par défaut n'est
+pas `main`, chaque fusion demandera cette manœuvre.** Une fois le réglage fait,
+retirer la branche de travail des déclencheurs de `deploy.yml`.
+
 ### Prochaine étape
 
-1. Fusionner la pull request, activer Pages, vérifier que le site s'ouvre.
-2. Lancer `data.yml` dans Actions pour produire les données de Lyon.
-3. Lire le rapport `pipeline/rapports/lcz.md`, confirmer le millésime, corriger
-   le tableau de `docs/METHODE.md` si le guide du Cerema le demande.
-4. Remplacer les trois adresses témoins par des adresses qu'elle connaît.
+1. **Elle** : vérifier sur téléphone qu'une adresse lyonnaise donne bien un
+   verdict, et qu'une adresse hors aire le dit nettement.
+2. **Elle** : donner trois adresses qu'elle connaît avec le verdict attendu,
+   pour remplacer les témoins posés par Claude et passer `"confirme": true`.
+3. **Elle** : passer la branche par défaut à `main`, et le dépôt en public.
+4. Relire le guide utilisateur et le guide technique du Cerema, puis corriger
+   le tableau des niveaux de `docs/METHODE.md` si nécessaire.
+5. Vérifier Firefox, Safari et Chrome, puis poser l'étiquette `v0.1`.

@@ -11,13 +11,13 @@ Une ligne par jeu utilisé. Rien n'est mis en ligne sans licence claire.
 | Page du jeu | https://www.data.gouv.fr/fr/datasets/6641c562e5acdb35c0e6051d/ |
 | Identifiant | `6641c562e5acdb35c0e6051d` |
 | Licence | Licence Ouverte (Etalab) |
-| Millésime | **à confirmer** lors de la première exécution du pipeline |
-| Date de téléchargement | **à renseigner automatiquement** par `pipeline/lcz` |
+| Millésime | **2022** (fichier `lcz-spot-2022-lyon.zip`) |
+| Date de téléchargement | 21 septembre 2026 |
 | Fréquence de mise à jour | ponctuelle ; à revérifier à chaque campagne |
 | Champs utilisés | la classe de zone (code 1 à 10 et A à G) et la géométrie |
-| Limites connues | décrit la forme d'un îlot, pas une température mesurée ; ne couvre que les aires urbaines du jeu ; l'échelle est l'îlot, pas le bâtiment |
+| Limites connues | décrit la forme d'un îlot, pas une température mesurée ; ne couvre que les aires urbaines du jeu ; l'échelle est l'îlot, pas le bâtiment ; **ne porte aucun rattachement communal**, d'où l'absence de pages par commune à l'étape 1 |
 
-Mention à afficher à côté de la donnée : « Source : Cerema, <millésime> ».
+Mention affichée à côté de la donnée : « Source : Cerema, 2022 ».
 
 Les valeurs marquées « à confirmer » sont remplies par le pipeline dans
 `public/data/lcz/meta.json` et reprises telles quelles par le site ; elles
