@@ -12,6 +12,13 @@ if (!existsSync(DIST)) {
   process.exit(1);
 }
 
+// Sans ces fichiers, la carte s'ouvre vide : MapLibre charge son fil
+// d'exécution séparé et sa feuille de style depuis ce dossier.
+const FICHIERS_CARTE = ['maplibre-gl.css', 'maplibre-gl-worker.js', 'maplibre-gl-shared.js'];
+const carteManquante = FICHIERS_CARTE.filter(
+  (nom) => !existsSync(join(DIST, 'carte', nom)),
+);
+
 let total = 0;
 const tuilesLourdes = [];
 
@@ -42,6 +49,11 @@ console.log(`Page d’accueil hors carte : ${(accueil / 1024).toFixed(1)} Ko (bu
 
 let echec = false;
 
+if (carteManquante.length > 0) {
+  console.error(`Fichiers de la carte absents de dist/carte/ : ${carteManquante.join(', ')}.`);
+  console.error('La carte s’ouvrirait vide. Lancez « node scripts/prepare-carte.mjs ».');
+  echec = true;
+}
 if (totalMo > BUDGET_TOTAL_MO) {
   console.error(`Budget dépassé : dist/ pèse ${totalMo.toFixed(1)} Mo.`);
   echec = true;

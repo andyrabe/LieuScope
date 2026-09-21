@@ -193,6 +193,37 @@ surprise de ce genre se voie.
 État à régler par elle, dans Settings du dépôt : branche par défaut à `main`.
 Le dépôt est passé en public (fait), donc les minutes d'Actions sont gratuites.
 
+### La carte ne se chargeait pas : cause et correction
+
+Signalé par elle sur téléphone. Jamais détecté avant parce que la Géoplateforme
+est bloquée depuis mon environnement : mon essai précédent coupait la requête du
+fond de carte, donc tout le chemin de la carte n'était en réalité jamais joué.
+Refait cette fois avec un fond de carte simulé, dans un vrai navigateur.
+
+**Cause.** MapLibre 6 fait son calcul de tuiles dans un fil d'exécution séparé,
+qu'il charge à une adresse calculée à partir de la sienne. L'outil de
+construction ne peut pas deviner cette adresse : le fichier n'était pas
+embarqué, et sa requête échouait. La carte s'ouvrait alors vide — canevas
+présent, contrôles présents, rien de dessiné, et **aucune erreur visible**.
+
+**Correction.** `scripts/prepare-carte.mjs` copie le worker et son voisin dans
+`public/carte/`, et `carte.ts` donne l'adresse à MapLibre par `setWorkerUrl`.
+Les deux fichiers sont renommés en `.js` : un fil d'exécution de module est
+refusé si le serveur annonce un autre type, et `.js` est le seul suffixe servi
+correctement partout. Le script récrit donc aussi le nom dans l'import du
+worker, et s'arrête net si cet import change de forme dans une version future.
+
+**Garde-fous ajoutés**, parce que cette panne était silencieuse :
+
+- `npm run poids` échoue si les fichiers de la carte manquent dans `dist/`.
+- L'ouverture de la carte a désormais un délai maximum et écoute les erreurs :
+  sans cela, un fond qui ne répond pas laissait un cadre gris pour toujours.
+- Un échec referme proprement la carte, au lieu d'en garder une à moitié ouverte.
+
+**Leçon de méthode.** « Les tests passent » ne valait rien ici : aucun test ne
+couvrait la carte, et mon essai en navigateur coupait justement la requête qui
+comptait. Un chemin simulé de bout en bout n'est pas un chemin vérifié.
+
 ### Prochaine étape
 
 1. **Elle** : vérifier sur téléphone qu'une adresse lyonnaise donne bien un

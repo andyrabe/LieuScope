@@ -17,8 +17,13 @@ let carte: import('maplibre-gl').Map | undefined;
  * Charge la feuille de style de MapLibre au dernier moment. Importée comme un
  * module, elle serait liée dans le <head> et retarderait l'affichage du verdict.
  */
+/** Dossier où sont copiés les fichiers de MapLibre (voir scripts/prepare-carte.mjs). */
+function racineCarte(): string {
+  return `${import.meta.env.BASE_URL.replace(/\/$/, '')}/carte`;
+}
+
 function poseFeuilleDeStyle(): void {
-  const href = `${import.meta.env.BASE_URL.replace(/\/$/, '')}/carte/maplibre-gl.css`;
+  const href = `${racineCarte()}/maplibre-gl.css`;
   if (document.querySelector(`link[href="${href}"]`) !== null) return;
   const lien = document.createElement('link');
   lien.rel = 'stylesheet';
@@ -29,6 +34,10 @@ function poseFeuilleDeStyle(): void {
 export async function montreCarte(point: Point, charge: ChargeurTuile): Promise<void> {
   poseFeuilleDeStyle();
   const maplibre = await import('maplibre-gl');
+  // MapLibre calcule les tuiles dans un fil d'exécution séparé, chargé depuis
+  // une adresse qu'il devine à partir de la sienne. Après construction, cette
+  // adresse ne mène nulle part et la carte reste vide. On lui donne la bonne.
+  maplibre.setWorkerUrl(`${racineCarte()}/maplibre-gl-worker.js`);
   const conteneur = document.getElementById('carte');
   if (conteneur === null) return;
 
@@ -44,9 +53,27 @@ export async function montreCarte(point: Point, charge: ChargeurTuile): Promise<
       attributionControl: { compact: false, customAttribution: ATTRIBUTION },
     });
     carte.addControl(new maplibre.NavigationControl({ showCompass: false }), 'top-right');
-    await new Promise<void>((resoudre) => {
-      carte?.on('load', () => resoudre());
-    });
+    try {
+      // Sans garde-fou, un fond de carte qui ne répond pas laisse la promesse
+      // en attente pour toujours, et un cadre gris à l'écran.
+      await new Promise<void>((resoudre, rejeter) => {
+        const minuteur = setTimeout(() => rejeter(new Error('Carte trop lente')), 15000);
+        carte?.on('load', () => {
+          clearTimeout(minuteur);
+          resoudre();
+        });
+        carte?.on('error', (evenement) => {
+          clearTimeout(minuteur);
+          rejeter(evenement.error ?? new Error('Carte en erreur'));
+        });
+      });
+    } catch (erreur) {
+      // On repart de zéro au prochain essai : une carte à moitié ouverte ne
+      // se répare pas toute seule.
+      carte.remove();
+      carte = undefined;
+      throw erreur;
+    }
   } else {
     carte.setCenter([point.lon, point.lat]);
     carte.setZoom(14);
